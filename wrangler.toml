@@ -1,0 +1,12 @@
+name = "doctor-matching"
+compatibility_date = "2024-02-20"
+
+# D1データベースの設定
+[[d1_databases]]
+binding = "DB"
+database_name = "doctor_matching_db"
+database_id = "your-database-id" # Cloudflareダッシュボードで取得したIDに置き換えてください
+
+# 環境変数
+[vars]
+JWT_SECRET = "your-jwt-secret-key" # 本番環境では必ず変更してください 
