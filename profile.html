@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>医師プロフィール - Medical Network</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -43,6 +44,7 @@
             border-radius: 10px;
             padding: 40px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
         }
 
         .profile-section {
@@ -95,6 +97,40 @@
             font-size: 1.1em;
         }
 
+        .chart-container {
+            margin: 20px 0;
+            height: 300px;
+        }
+
+        .surgery-stats {
+            margin-top: 20px;
+        }
+
+        .surgery-list {
+            list-style: none;
+        }
+
+        .surgery-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .surgery-item:last-child {
+            border-bottom: none;
+        }
+
+        .surgery-name {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .surgery-count {
+            color: #3498db;
+            font-weight: bold;
+        }
+
         @media (max-width: 480px) {
             .header {
                 padding: 40px 0;
@@ -110,6 +146,10 @@
 
             .introduction {
                 font-size: 1em;
+            }
+
+            .chart-container {
+                height: 250px;
             }
         }
     </style>
@@ -152,6 +192,76 @@
                 </p>
             </div>
         </div>
+
+        <div class="profile-card">
+            <div class="profile-section">
+                <h2 class="section-title">専門分野スキル</h2>
+                <div class="chart-container">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="section-title">手術件数</h2>
+                <div class="surgery-stats">
+                    <ul class="surgery-list">
+                        <li class="surgery-item">
+                            <span class="surgery-name">マイクロサージャリー</span>
+                            <span class="surgery-count">48件</span>
+                        </li>
+                        <li class="surgery-item">
+                            <span class="surgery-name">LVA（リンパ管静脈吻合）</span>
+                            <span class="surgery-count">21件</span>
+                        </li>
+                        <li class="surgery-item">
+                            <span class="surgery-name">皮膚腫瘍切除術</span>
+                            <span class="surgery-count">35件</span>
+                        </li>
+                        <li class="surgery-item">
+                            <span class="surgery-name">乳房再建術</span>
+                            <span class="surgery-count">12件</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // スキルチャートの設定
+        const ctx = document.getElementById('skillsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['形成外科', '皮膚科', 'マイクロサージャリー', 'リンパ浮腫手術'],
+                datasets: [{
+                    label: 'スキルレベル',
+                    data: [3, 4, 5, 4],
+                    backgroundColor: '#3498db',
+                    borderColor: '#2980b9',
+                    borderWidth: 1,
+                    maxBarThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 </html> 
