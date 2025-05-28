@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>医師プロフィール一覧 - Medical Network</title>
+    <title>医師プロフィール - Medical Network</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -14,198 +14,252 @@
 
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f5f5f5;
+            background-color: #f0f2f5;
             color: #333;
             line-height: 1.6;
-            padding: 40px 20px;
+        }
+
+        .header {
+            background-color: white;
+            padding: 60px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
         }
 
-        h1 {
-            text-align: center;
-            color: #2c3e50;
+        .profile-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
 
-        .doctors-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
+        .profile-section {
+            margin-bottom: 30px;
         }
 
-        .doctor-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .profile-section:last-child {
+            margin-bottom: 0;
         }
 
-        .doctor-name {
+        .section-title {
             font-size: 1.2em;
-            font-weight: bold;
             color: #2c3e50;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #3498db;
         }
 
-        .doctor-info {
+        .info-item {
             margin-bottom: 15px;
         }
 
-        .doctor-specialties {
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .specialties {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 10px;
         }
 
         .specialty-tag {
-            background: #e1f5fe;
-            color: #0288d1;
-            padding: 4px 8px;
-            border-radius: 4px;
+            background-color: #e1f0fa;
+            color: #3498db;
+            padding: 5px 15px;
+            border-radius: 20px;
             font-size: 0.9em;
         }
 
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.2em;
-            color: #666;
-        }
-
-        .error {
-            text-align: center;
-            padding: 20px;
-            color: #e74c3c;
-        }
-
-        .stats-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        .introduction {
+            line-height: 1.8;
+            color: #444;
+            font-size: 1.1em;
         }
 
         .chart-container {
-            position: relative;
+            margin: 20px 0;
             height: 300px;
+        }
+
+        .surgery-stats {
             margin-top: 20px;
+        }
+
+        .surgery-list {
+            list-style: none;
+        }
+
+        .surgery-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .surgery-item:last-child {
+            border-bottom: none;
+        }
+
+        .surgery-name {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .surgery-count {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 40px 0;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .profile-card {
+                padding: 20px;
+            }
+
+            .introduction {
+                font-size: 1em;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>山田 太郎</h1>
+    </div>
+
     <div class="container">
-        <h1>医師プロフィール一覧</h1>
-        
-        <div class="stats-container">
-            <h2>診療科分布</h2>
-            <div class="chart-container">
-                <canvas id="specialtiesChart"></canvas>
+        <div class="profile-card">
+            <div class="profile-section">
+                <h2 class="section-title">基本情報</h2>
+                <div class="info-item">
+                    <div class="info-label">性別</div>
+                    <div class="info-value">男性</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">生年月日</div>
+                    <div class="info-value">1985年5月20日</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">医師免許取得年月</div>
+                    <div class="info-value">2010年4月</div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="section-title">診療科</h2>
+                <div class="specialties">
+                    <span class="specialty-tag">形成外科</span>
+                    <span class="specialty-tag">皮膚科</span>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="section-title">自己紹介</h2>
+                <p class="introduction">
+                    患者さんに寄り添う医療を大切にしています。趣味は登山と読書です。
+                </p>
             </div>
         </div>
 
-        <div id="doctorsList" class="doctors-grid">
-            <div class="loading">読み込み中...</div>
+        <div class="profile-card">
+            <div class="profile-section">
+                <h2 class="section-title">専門分野スキル</h2>
+                <div class="chart-container">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h2 class="section-title">手術件数</h2>
+                <div class="surgery-stats">
+                    <ul class="surgery-list">
+                        <li class="surgery-item">
+                            <span class="surgery-name">マイクロサージャリー</span>
+                            <span class="surgery-count">48件</span>
+                        </li>
+                        <li class="surgery-item">
+                            <span class="surgery-name">LVA（リンパ管静脈吻合）</span>
+                            <span class="surgery-count">21件</span>
+                        </li>
+                        <li class="surgery-item">
+                            <span class="surgery-name">皮膚腫瘍切除術</span>
+                            <span class="surgery-count">35件</span>
+                        </li>
+                        <li class="surgery-item">
+                            <span class="surgery-name">乳房再建術</span>
+                            <span class="surgery-count">12件</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        let specialtiesChart = null;
-
-        function updateSpecialtiesChart(doctors) {
-            // 診療科の集計
-            const specialtyCount = {};
-            doctors.forEach(doctor => {
-                doctor.specialties.forEach(specialty => {
-                    specialtyCount[specialty] = (specialtyCount[specialty] || 0) + 1;
-                });
-            });
-
-            const labels = Object.keys(specialtyCount);
-            const data = Object.values(specialtyCount);
-
-            // 既存のチャートを破棄
-            if (specialtiesChart) {
-                specialtiesChart.destroy();
-            }
-
-            // 新しいチャートを作成
-            const ctx = document.getElementById('specialtiesChart').getContext('2d');
-            specialtiesChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: '医師数',
-                        data: data,
-                        backgroundColor: 'rgba(52, 152, 219, 0.5)',
-                        borderColor: 'rgba(52, 152, 219, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
+        // スキルチャートの設定
+        const ctx = document.getElementById('skillsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['形成外科', '皮膚科', 'マイクロサージャリー', 'リンパ浮腫手術'],
+                datasets: [{
+                    label: 'スキルレベル',
+                    data: [3, 4, 5, 4],
+                    backgroundColor: '#3498db',
+                    borderColor: '#2980b9',
+                    borderWidth: 1,
+                    maxBarThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        ticks: {
+                            stepSize: 1
                         }
                     }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
-            });
-        }
-
-        async function loadDoctors() {
-            try {
-                const response = await fetch('/api/doctors');
-                const data = await response.json();
-
-                const doctorsList = document.getElementById('doctorsList');
-                doctorsList.innerHTML = '';
-
-                if (data.success && data.doctors.length > 0) {
-                    // 診療科分布グラフを更新
-                    updateSpecialtiesChart(data.doctors);
-
-                    data.doctors.forEach(doctor => {
-                        const doctorCard = document.createElement('div');
-                        doctorCard.className = 'doctor-card';
-                        
-                        doctorCard.innerHTML = `
-                            <div class="doctor-name">${doctor.name}</div>
-                            <div class="doctor-info">
-                                <p>性別: ${doctor.gender === 'M' ? '男性' : '女性'}</p>
-                                <p>医師免許取得: ${new Date(doctor.license_date).getFullYear()}年</p>
-                            </div>
-                            <div class="doctor-specialties">
-                                ${doctor.specialties.map(specialty => 
-                                    `<span class="specialty-tag">${specialty}</span>`
-                                ).join('')}
-                            </div>
-                        `;
-                        
-                        doctorsList.appendChild(doctorCard);
-                    });
-                } else {
-                    doctorsList.innerHTML = '<div class="error">医師情報が見つかりませんでした</div>';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('doctorsList').innerHTML = 
-                    '<div class="error">データの読み込み中にエラーが発生しました</div>';
             }
-        }
-
-        // ページ読み込み時に医師一覧を取得
-        document.addEventListener('DOMContentLoaded', loadDoctors);
+        });
     </script>
 </body>
 </html> 

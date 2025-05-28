@@ -160,7 +160,7 @@
 <body>
     <div class="container">
         <h1>医師会員登録</h1>
-        <form id="registerForm" action="#" method="POST">
+        <form action="#" method="POST">
             <div class="form-group">
                 <label for="name" class="required">氏名</label>
                 <input type="text" id="name" name="name" required placeholder="例：山田 太郎">
@@ -170,8 +170,9 @@
                 <label for="gender" class="required">性別</label>
                 <select id="gender" name="gender" required>
                     <option value="">選択してください</option>
-                    <option value="M">男性</option>
-                    <option value="F">女性</option>
+                    <option value="male">男性</option>
+                    <option value="female">女性</option>
+                    <option value="other">その他</option>
                 </select>
             </div>
 
@@ -187,8 +188,23 @@
 
             <div class="form-group">
                 <label class="required">診療科</label>
-                <div id="specialties-container" class="checkbox-group">
-                    <div class="loading">診療科を読み込み中...</div>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="internal" name="specialties" value="internal">
+                        <label for="internal">内科</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="surgery" name="specialties" value="surgery">
+                        <label for="surgery">外科</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="plastic" name="specialties" value="plastic">
+                        <label for="plastic">形成外科</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="other" name="specialties" value="other">
+                        <label for="other">その他</label>
+                    </div>
                 </div>
                 <p class="form-note">※複数選択可能です</p>
             </div>
@@ -211,75 +227,5 @@
             </div>
         </form>
     </div>
-
-    <script>
-        // 診療科一覧を取得
-        async function loadSpecialties() {
-            try {
-                const response = await fetch('/api/specialties');
-                const data = await response.json();
-                
-                const container = document.getElementById('specialties-container');
-                container.innerHTML = '';
-                
-                data.specialties.forEach(specialty => {
-                    const div = document.createElement('div');
-                    div.className = 'checkbox-item';
-                    div.innerHTML = `
-                        <input type="checkbox" id="specialty-${specialty.id}" name="specialties" value="${specialty.id}">
-                        <label for="specialty-${specialty.id}">${specialty.name}</label>
-                    `;
-                    container.appendChild(div);
-                });
-            } catch (error) {
-                console.error('Error loading specialties:', error);
-                document.getElementById('specialties-container').innerHTML = 
-                    '<div class="error">診療科の読み込みに失敗しました</div>';
-            }
-        }
-
-        // ページ読み込み時に診療科一覧を取得
-        document.addEventListener('DOMContentLoaded', loadSpecialties);
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            // フォームデータの取得
-            const formData = new FormData(e.target);
-            const specialties = Array.from(formData.getAll('specialties')).map(value => parseInt(value));
-
-            const data = {
-                name: formData.get('name'),
-                gender: formData.get('gender'),
-                birthdate: formData.get('birthdate'),
-                licenseDate: formData.get('license-date'),
-                specialties: specialties,
-                email: formData.get('email'),
-                password: formData.get('password')
-            };
-
-            try {
-                const response = await fetch('/api/doctors/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('登録が完了しました');
-                    window.location.href = '/profile.html'; // プロフィール一覧ページへリダイレクト
-                } else {
-                    alert('登録に失敗しました: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('登録処理中にエラーが発生しました');
-            }
-        });
-    </script>
 </body>
 </html> 

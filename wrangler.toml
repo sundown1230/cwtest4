@@ -25,4 +25,4 @@ upload.format = "directory"
 [env.production]
 name = "cwtest4"
 route = "cwtest4.pages.dev"
-workers_dev = false 
+workers_dev = false
