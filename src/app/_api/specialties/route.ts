@@ -1,32 +1,43 @@
 import { NextResponse } from 'next/server';
 import { ApiResponse } from '@/types';
 
-interface Specialty {
-  id: number;
-  name: string;
-}
+const specialties = [
+  '内科',
+  '外科',
+  '小児科',
+  '産婦人科',
+  '眼科',
+  '耳鼻咽喉科',
+  '皮膚科',
+  '精神科',
+  '整形外科',
+  '脳神経外科',
+  '心臓血管外科',
+  '呼吸器外科',
+  '消化器外科',
+  '泌尿器科',
+  '放射線科',
+  '麻酔科',
+  '病理診断科',
+  '臨床検査科',
+  '救急科',
+  '総合診療科'
+];
 
 export async function GET() {
   try {
-    const response = await fetch(`${process.env.API_URL}/api/specialties`);
-    const result = await response.json() as ApiResponse<Specialty[]>;
-
-    if (!result.success || !result.data) {
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: result.error || 'Failed to fetch specialties'
-      }, { status: 400 });
-    }
-
-    return NextResponse.json<ApiResponse>({
+    const response: ApiResponse<string[]> = {
       success: true,
-      data: result.data
-    });
+      data: specialties
+    };
+    
+    return NextResponse.json(response);
   } catch (error) {
-    console.error('Specialties fetch error:', error);
-    return NextResponse.json<ApiResponse>({
+    const response: ApiResponse = {
       success: false,
-      error: 'Internal server error'
-    }, { status: 500 });
+      error: '診療科情報の取得に失敗しました'
+    };
+    
+    return NextResponse.json(response, { status: 500 });
   }
 } 
