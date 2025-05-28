@@ -1,8 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ApiResponse } from '@/types';
+
+interface Specialty {
+  id: number;
+  name: string;
+}
 
 export default function Register() {
   const router = useRouter();
@@ -15,14 +21,40 @@ export default function Register() {
     email: '',
     password: '',
   });
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        const res = await fetch('/api/specialties');
+        const data = await res.json() as ApiResponse<Specialty[]>;
+
+        if (!data.success) {
+          setError(data.error || '診療科の取得に失敗しました');
+          return;
+        }
+
+        if (!data.data) {
+          setError('診療科が見つかりません');
+          return;
+        }
+
+        setSpecialties(data.data);
+      } catch (err) {
+        setError('診療科の取得に失敗しました');
+      }
+    };
+
+    fetchSpecialties();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await fetch('/api/register', {
+      const res = await fetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,18 +62,27 @@ export default function Register() {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
+      const data = await res.json() as ApiResponse;
 
       if (!data.success) {
         setError(data.error || '登録に失敗しました');
         return;
       }
 
-      // 登録成功時はログインページにリダイレクト
+      // ログインページにリダイレクト
       router.push('/login');
-    } catch (error) {
+    } catch (err) {
       setError('登録に失敗しました');
     }
+  };
+
+  const handleSpecialtyChange = (specialtyId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      specialties: prev.specialties.includes(specialtyId)
+        ? prev.specialties.filter(id => id !== specialtyId)
+        : [...prev.specialties, specialtyId]
+    }));
   };
 
   return (
@@ -117,6 +158,28 @@ export default function Register() {
                 value={formData.license_date}
                 onChange={(e) => setFormData({ ...formData, license_date: e.target.value })}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">専門分野</label>
+              <div className="mt-2 space-y-2">
+                {specialties.map((specialty) => (
+                  <div key={specialty.id} className="flex items-center">
+                    <input
+                      id={`specialty-${specialty.id}`}
+                      name="specialties"
+                      type="checkbox"
+                      value={specialty.id}
+                      checked={formData.specialties.includes(specialty.id)}
+                      onChange={() => handleSpecialtyChange(specialty.id)}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor={`specialty-${specialty.id}`} className="ml-3 block text-sm font-medium text-gray-700">
+                      {specialty.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
