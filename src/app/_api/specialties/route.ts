@@ -26,18 +26,14 @@ const specialties = [
 
 export async function GET() {
   try {
-    const response: ApiResponse<string[]> = {
+    return NextResponse.json({
       success: true,
-      data: specialties
-    };
-    
-    return NextResponse.json(response);
+      specialties
+    });
   } catch (error) {
-    const response: ApiResponse = {
+    return NextResponse.json({
       success: false,
       error: '診療科情報の取得に失敗しました'
-    };
-    
-    return NextResponse.json(response, { status: 500 });
+    }, { status: 500 });
   }
 } 

@@ -42,8 +42,8 @@ export default function Home() {
         throw new Error('診療科情報の取得に失敗しました');
       }
       const data = await response.json();
-      if (data.success && data.data) {
-        setSpecialties(data.data);
+      if (data.success && data.specialties) {
+        setSpecialties(data.specialties);
       }
     } catch (error) {
       console.error('Failed to fetch specialties:', error);
