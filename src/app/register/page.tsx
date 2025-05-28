@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RegisterRequest, ApiResponse } from '@/types';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
 export default function Register() {
   const router = useRouter();
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<RegisterRequest>({
     name: '',
     gender: 'M',
@@ -25,20 +28,27 @@ export default function Register() {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await fetch('/_api/specialties');
+      const response = await fetch(`${API_BASE_URL}/specialties`);
+      if (!response.ok) {
+        throw new Error('診療科情報の取得に失敗しました');
+      }
       const data: ApiResponse<string[]> = await response.json();
       if (data.success && data.data) {
         setSpecialties(data.data);
       }
     } catch (error) {
       console.error('Failed to fetch specialties:', error);
+      setError('診療科情報の取得に失敗しました');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
     try {
-      const response = await fetch('/_api/register', {
+      const response = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,14 +56,18 @@ export default function Register() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json() as ApiResponse;
+
       if (response.ok) {
         router.push('/login');
       } else {
-        const data = await response.json() as ApiResponse;
         setError(data.error || '登録に失敗しました');
       }
     } catch (error) {
+      console.error('Registration error:', error);
       setError('登録中にエラーが発生しました');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,6 +98,7 @@ export default function Register() {
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -95,6 +110,7 @@ export default function Register() {
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+              disabled={isLoading}
             >
               <option value="M">男性</option>
               <option value="F">女性</option>
@@ -110,6 +126,7 @@ export default function Register() {
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -122,6 +139,7 @@ export default function Register() {
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -134,6 +152,7 @@ export default function Register() {
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+              disabled={isLoading}
             />
           </div>
 
@@ -146,14 +165,17 @@ export default function Register() {
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
+              disabled={isLoading}
+              minLength={8}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
           >
-            登録
+            {isLoading ? '登録中...' : '登録'}
           </button>
         </form>
         <div className="mt-4 text-center">

@@ -16,7 +16,7 @@ export interface RegisterRequest {
   gender: 'M' | 'F';
   birthdate: string;
   license_date: string;
-  specialties: number[];
+  specialties: string[];
   email: string;
   password: string;
 }
@@ -41,4 +41,16 @@ export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  gender: 'M' | 'F';
+  birthdate: string;
+  license_date: string;
+  specialties: string[];
+  created_at: string;
+  updated_at: string;
 } 
