@@ -15,7 +15,6 @@
     "outDir": "dist",
     "jsx": "preserve",
     "types": [
-      "@cloudflare/workers-types",
       "node"
     ],
     "baseUrl": ".",
