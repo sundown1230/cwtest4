@@ -28,7 +28,7 @@ export default function Register() {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/specialties`);
+      const response = await fetch(`${API_BASE_URL}/_api/specialties`);
       if (!response.ok) {
         throw new Error('診療科情報の取得に失敗しました');
       }
@@ -80,15 +80,15 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center p-4">
-      <div className="bg-white/90 rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">新規会員登録</h1>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
+        <h1 className="text-2xl font-semibold text-center mb-6 text-gray-800">新規会員登録</h1>
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-4 text-sm">
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">名前</label>
             <input
@@ -96,7 +96,7 @@ export default function Register() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
             />
@@ -108,7 +108,7 @@ export default function Register() {
               name="gender"
               value={formData.gender}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
             >
@@ -124,7 +124,7 @@ export default function Register() {
               name="birthdate"
               value={formData.birthdate}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
             />
@@ -137,7 +137,7 @@ export default function Register() {
               name="license_date"
               value={formData.license_date}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
             />
@@ -149,7 +149,7 @@ export default function Register() {
               name="specialties"
               value={formData.specialties[0] || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, specialties: [e.target.value] }))}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
             >
@@ -169,7 +169,7 @@ export default function Register() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
             />
@@ -182,7 +182,7 @@ export default function Register() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
               minLength={8}
@@ -191,14 +191,14 @@ export default function Register() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isLoading}
           >
             {isLoading ? '登録中...' : '登録'}
           </button>
         </form>
         <div className="mt-4 text-center">
-          <Link href="/login" className="text-blue-500 hover:text-blue-600">
+          <Link href="/login" className="text-sm text-blue-600 hover:text-blue-700">
             すでにアカウントをお持ちの方はこちら
           </Link>
         </div>
