@@ -28,7 +28,7 @@ export default function Register() {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/specialties`);
+      const response = await fetch(`${API_BASE_URL}/api/specialties`);
       if (!response.ok) {
         throw new Error('診療科情報の取得に失敗しました');
       }
