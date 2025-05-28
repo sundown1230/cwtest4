@@ -25,7 +25,7 @@ export default function Register() {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await fetch('/api/specialties');
+      const response = await fetch('/_api/specialties');
       const data: ApiResponse<string[]> = await response.json();
       if (data.success && data.data) {
         setSpecialties(data.data);
@@ -38,7 +38,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch('/_api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,8 +79,9 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700 mb-1">名前</label>
             <input
               type="text"
+              name="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -89,8 +90,9 @@ export default function Register() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
             <select
+              name="gender"
               value={formData.gender}
-              onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'M' | 'F' })}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
@@ -103,8 +105,9 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
             <input
               type="date"
+              name="birthdate"
               value={formData.birthdate}
-              onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -114,8 +117,9 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700 mb-1">医師免許取得日</label>
             <input
               type="date"
+              name="license_date"
               value={formData.license_date}
-              onChange={(e) => setFormData({ ...formData, license_date: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -125,8 +129,9 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
             <input
               type="email"
+              name="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -136,8 +141,9 @@ export default function Register() {
             <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
             <input
               type="password"
+              name="password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
