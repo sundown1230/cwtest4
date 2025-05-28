@@ -144,6 +144,25 @@ export default function Register() {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">診療科</label>
+            <select
+              name="specialties"
+              value={formData.specialties[0] || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, specialties: [e.target.value] }))}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+              disabled={isLoading}
+            >
+              <option value="">選択してください</option>
+              {specialties.map((specialty) => (
+                <option key={specialty} value={specialty}>
+                  {specialty}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
             <input
               type="email"
