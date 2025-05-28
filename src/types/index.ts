@@ -6,9 +6,8 @@ export interface Doctor {
   birthdate: string;
   license_date: string;
   email: string;
+  password: string;
   specialties: string[];
-  created_at: string;
-  updated_at: string;
 }
 
 // 新規登録時のリクエスト
@@ -32,11 +31,13 @@ export interface LoginRequest {
 export interface JWTPayload {
   id: number;
   email: string;
-  userType: 'doctor' | 'hospital';
+  iat?: number;
+  exp?: number;
+  [key: string]: any;
 }
 
 // APIレスポンスの共通型
-export interface ApiResponse<T> {
+export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;

@@ -3,229 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>医師会員登録 - Medical Network</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background-color: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 24px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="date"],
-        input[type="month"],
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus,
-        select:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-        }
-
-        .checkbox-group {
-            margin-top: 10px;
-        }
-
-        .checkbox-item {
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-        }
-
-        .checkbox-item label {
-            margin-bottom: 0;
-            font-weight: normal;
-        }
-
-        .required::after {
-            content: " *";
-            color: #e74c3c;
-        }
-
-        .form-note {
-            font-size: 14px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #2980b9;
-        }
-
-        .terms {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .terms a {
-            color: #3498db;
-            text-decoration: none;
-        }
-
-        .terms a:hover {
-            text-decoration: underline;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 20px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
-
-            input[type="text"],
-            input[type="email"],
-            input[type="password"],
-            input[type="date"],
-            input[type="month"],
-            select {
-                font-size: 14px;
-                padding: 10px;
-            }
-        }
-    </style>
+    <title>医師登録</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>医師会員登録</h1>
-        <form action="#" method="POST">
-            <div class="form-group">
-                <label for="name" class="required">氏名</label>
-                <input type="text" id="name" name="name" required placeholder="例：山田 太郎">
-            </div>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                医師登録
+            </h2>
+        </div>
 
-            <div class="form-group">
-                <label for="gender" class="required">性別</label>
-                <select id="gender" name="gender" required>
-                    <option value="">選択してください</option>
-                    <option value="male">男性</option>
-                    <option value="female">女性</option>
-                    <option value="other">その他</option>
-                </select>
-            </div>
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                <form id="registerForm" class="space-y-6">
+                    <div id="error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded"></div>
 
-            <div class="form-group">
-                <label for="birthdate" class="required">生年月日</label>
-                <input type="date" id="birthdate" name="birthdate" required>
-            </div>
-
-            <div class="form-group">
-                <label for="license-date" class="required">医師免許取得年月</label>
-                <input type="month" id="license-date" name="license-date" required>
-            </div>
-
-            <div class="form-group">
-                <label class="required">診療科</label>
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="internal" name="specialties" value="internal">
-                        <label for="internal">内科</label>
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">
+                            お名前
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
                     </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="surgery" name="specialties" value="surgery">
-                        <label for="surgery">外科</label>
+
+                    <div>
+                        <label for="gender" class="block text-sm font-medium text-gray-700">
+                            性別
+                        </label>
+                        <select
+                            id="gender"
+                            name="gender"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        >
+                            <option value="M">男性</option>
+                            <option value="F">女性</option>
+                        </select>
                     </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="plastic" name="specialties" value="plastic">
-                        <label for="plastic">形成外科</label>
+
+                    <div>
+                        <label for="birthdate" class="block text-sm font-medium text-gray-700">
+                            生年月日
+                        </label>
+                        <input
+                            type="date"
+                            id="birthdate"
+                            name="birthdate"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
                     </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="other" name="specialties" value="other">
-                        <label for="other">その他</label>
+
+                    <div>
+                        <label for="license_date" class="block text-sm font-medium text-gray-700">
+                            医師免許取得日
+                        </label>
+                        <input
+                            type="date"
+                            id="license_date"
+                            name="license_date"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">
+                            専門分野
+                        </label>
+                        <div id="specialties" class="mt-2 space-y-2">
+                            <!-- 専門分野のチェックボックスはJavaScriptで動的に追加 -->
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">
+                            メールアドレス
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">
+                            パスワード
+                        </label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                        >
+                            登録
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">
+                                すでにアカウントをお持ちの方は
+                                <a href="/login" class="font-medium text-primary hover:text-primary/90">
+                                    ログイン
+                                </a>
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <p class="form-note">※複数選択可能です</p>
             </div>
-
-            <div class="form-group">
-                <label for="email" class="required">メールアドレス</label>
-                <input type="email" id="email" name="email" required placeholder="example@email.com">
-            </div>
-
-            <div class="form-group">
-                <label for="password" class="required">パスワード</label>
-                <input type="password" id="password" name="password" required placeholder="8文字以上">
-                <p class="form-note">※8文字以上の英数字で設定してください</p>
-            </div>
-
-            <button type="submit">会員登録する</button>
-
-            <div class="terms">
-                <p>登録することで、<a href="#">利用規約</a>と<a href="#">プライバシーポリシー</a>に同意したものとみなされます。</p>
-            </div>
-        </form>
+        </div>
     </div>
+
+    <script>
+        // 専門分野の取得と表示
+        async function loadSpecialties() {
+            try {
+                const response = await fetch('/api/specialties');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const specialtiesContainer = document.getElementById('specialties');
+                    data.specialties.forEach(specialty => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center';
+                        div.innerHTML = `
+                            <input
+                                type="checkbox"
+                                id="specialty-${specialty.id}"
+                                name="specialties"
+                                value="${specialty.id}"
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            />
+                            <label for="specialty-${specialty.id}" class="ml-2 block text-sm text-gray-900">
+                                ${specialty.name}
+                            </label>
+                        `;
+                        specialtiesContainer.appendChild(div);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading specialties:', error);
+            }
+        }
+
+        // フォーム送信の処理
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const errorDiv = document.getElementById('error');
+            errorDiv.classList.add('hidden');
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                gender: document.getElementById('gender').value,
+                birthdate: document.getElementById('birthdate').value,
+                license_date: document.getElementById('license_date').value,
+                specialties: Array.from(document.querySelectorAll('input[name="specialties"]:checked')).map(cb => parseInt(cb.value)),
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/api/doctors/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    errorDiv.textContent = data.error || '登録に失敗しました';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                errorDiv.textContent = '登録に失敗しました';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // ページ読み込み時に専門分野を取得
+        loadSpecialties();
+    </script>
 </body>
 </html> 

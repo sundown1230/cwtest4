@@ -1,63 +1,56 @@
 import { NextResponse } from 'next/server';
 import { hashPassword } from '@/utils/auth';
-import type { RegisterRequest, ApiResponse } from '@/types';
+import { RegisterRequest, ApiResponse, Doctor } from '@/types';
 
 export async function POST(request: Request) {
   try {
     const body: RegisterRequest = await request.json();
     const { name, gender, birthdate, license_date, specialties, email, password } = body;
 
-    // バリデーション
-    if (!name || !gender || !birthdate || !license_date || !specialties || !email || !password) {
-      return NextResponse.json<ApiResponse<null>>({
+    // パスワードをハッシュ化
+    const hashedPassword = await hashPassword(password);
+
+    // 医師情報を登録
+    const response = await fetch(`${process.env.API_URL}/api/doctors/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name,
+        gender,
+        birthdate,
+        license_date,
+        specialties,
+        email,
+        password: hashedPassword
+      })
+    });
+
+    const result = await response.json() as ApiResponse<Doctor>;
+
+    if (!result.success || !result.data) {
+      return NextResponse.json<ApiResponse>({
         success: false,
-        error: '必須項目が入力されていません'
+        error: result.error || 'Registration failed'
       }, { status: 400 });
     }
 
-    // パスワードのハッシュ化
-    const passwordHash = await hashPassword(password);
+    const { id, name: doctorName, email: doctorEmail } = result.data;
 
-    // D1データベースに保存
-    const db = (request as any).env.DB;
-    
-    // トランザクション開始
-    await db.prepare('BEGIN').run();
-
-    try {
-      // 医師情報の保存
-      const result = await db.prepare(`
-        INSERT INTO doctors (name, gender, birthdate, license_date, email, password_hash)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(name, gender, birthdate, license_date, email, passwordHash).run();
-
-      const doctorId = result.meta.last_row_id;
-
-      // 診療科の保存
-      for (const specialtyId of specialties) {
-        await db.prepare(`
-          INSERT INTO doctor_specialties (doctor_id, specialty_id)
-          VALUES (?, ?)
-        `).bind(doctorId, specialtyId).run();
+    return NextResponse.json<ApiResponse>({
+      success: true,
+      data: {
+        id,
+        name: doctorName,
+        email: doctorEmail
       }
-
-      // トランザクションのコミット
-      await db.prepare('COMMIT').run();
-
-      return NextResponse.json<ApiResponse<null>>({
-        success: true,
-        data: null
-      });
-    } catch (error) {
-      // エラー時はロールバック
-      await db.prepare('ROLLBACK').run();
-      throw error;
-    }
+    });
   } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json<ApiResponse<null>>({
+    return NextResponse.json<ApiResponse>({
       success: false,
-      error: '登録に失敗しました'
+      error: 'Internal server error'
     }, { status: 500 });
   }
 } 

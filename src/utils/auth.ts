@@ -2,15 +2,16 @@ import { SignJWT, jwtVerify } from 'jose';
 import { JWTPayload } from '@/types';
 
 // JWTの署名と検証に使用するシークレットキー
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-jwt-secret-key');
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
 
 // JWTトークンを生成する関数
-export async function generateToken(payload: JWTPayload): Promise<string> {
-  return await new SignJWT(payload)
+export async function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): Promise<string> {
+  const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('24h')
     .sign(JWT_SECRET);
+  return token;
 }
 
 // JWTトークンを検証する関数
@@ -34,7 +35,7 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 // パスワードを検証する関数
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const hashedPassword = await hashPassword(password);
-  return hashedPassword === hash;
+export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  const hashedInput = await hashPassword(password);
+  return hashedInput === hashedPassword;
 } 
