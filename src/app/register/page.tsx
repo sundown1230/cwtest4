@@ -3,58 +3,42 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ApiResponse } from '@/types';
-
-interface Specialty {
-  id: number;
-  name: string;
-}
+import { RegisterRequest, ApiResponse } from '@/types';
 
 export default function Register() {
   const router = useRouter();
-  const [formData, setFormData] = useState({
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [error, setError] = useState<string>('');
+  const [formData, setFormData] = useState<RegisterRequest>({
     name: '',
     gender: 'M',
     birthdate: '',
     license_date: '',
-    specialties: [] as number[],
+    specialties: [],
     email: '',
-    password: '',
+    password: ''
   });
-  const [specialties, setSpecialties] = useState<Specialty[]>([]);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchSpecialties = async () => {
-      try {
-        const res = await fetch('/api/specialties');
-        const data = await res.json() as ApiResponse<Specialty[]>;
-
-        if (!data.success) {
-          setError(data.error || '診療科の取得に失敗しました');
-          return;
-        }
-
-        if (!data.data) {
-          setError('診療科が見つかりません');
-          return;
-        }
-
-        setSpecialties(data.data);
-      } catch (err) {
-        setError('診療科の取得に失敗しました');
-      }
-    };
-
     fetchSpecialties();
   }, []);
 
+  const fetchSpecialties = async () => {
+    try {
+      const response = await fetch('/api/specialties');
+      const data: ApiResponse<string[]> = await response.json();
+      if (data.success && data.data) {
+        setSpecialties(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch specialties:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
     try {
-      const res = await fetch('/api/register', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -62,178 +46,116 @@ export default function Register() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json() as ApiResponse;
-
-      if (!data.success) {
+      if (response.ok) {
+        router.push('/login');
+      } else {
+        const data = await response.json() as ApiResponse;
         setError(data.error || '登録に失敗しました');
-        return;
       }
-
-      // ログインページにリダイレクト
-      router.push('/login');
-    } catch (err) {
-      setError('登録に失敗しました');
+    } catch (error) {
+      setError('登録中にエラーが発生しました');
     }
   };
 
-  const handleSpecialtyChange = (specialtyId: number) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      specialties: prev.specialties.includes(specialtyId)
-        ? prev.specialties.filter(id => id !== specialtyId)
-        : [...prev.specialties, specialtyId]
+      [name]: value
     }));
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          新規登録
-        </h2>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                氏名
-              </label>
-              <input
-                type="text"
-                id="name"
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
-                性別
-              </label>
-              <select
-                id="gender"
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
-                value={formData.gender}
-                onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'M' | 'F' })}
-              >
-                <option value="M">男性</option>
-                <option value="F">女性</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="birthdate" className="block text-sm font-medium text-gray-700">
-                生年月日
-              </label>
-              <input
-                type="date"
-                id="birthdate"
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
-                value={formData.birthdate}
-                onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="license_date" className="block text-sm font-medium text-gray-700">
-                医師免許取得年月日
-              </label>
-              <input
-                type="date"
-                id="license_date"
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
-                value={formData.license_date}
-                onChange={(e) => setFormData({ ...formData, license_date: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">専門分野</label>
-              <div className="mt-2 space-y-2">
-                {specialties.map((specialty) => (
-                  <div key={specialty.id} className="flex items-center">
-                    <input
-                      id={`specialty-${specialty.id}`}
-                      name="specialties"
-                      type="checkbox"
-                      value={specialty.id}
-                      checked={formData.specialties.includes(specialty.id)}
-                      onChange={() => handleSpecialtyChange(specialty.id)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor={`specialty-${specialty.id}`} className="ml-3 block text-sm font-medium text-gray-700">
-                      {specialty.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                メールアドレス
-              </label>
-              <input
-                type="email"
-                id="email"
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                パスワード
-              </label>
-              <input
-                type="password"
-                id="password"
-                required
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-              >
-                登録
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  すでにアカウントをお持ちの方は
-                  <Link href="/login" className="font-medium text-primary hover:text-primary/90">
-                    ログイン
-                  </Link>
-                </span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center p-4">
+      <div className="bg-white/90 rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">新規会員登録</h1>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
           </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">名前</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
+            <select
+              value={formData.gender}
+              onChange={(e) => setFormData({ ...formData, gender: e.target.value as 'M' | 'F' })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="M">男性</option>
+              <option value="F">女性</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">生年月日</label>
+            <input
+              type="date"
+              value={formData.birthdate}
+              onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">医師免許取得日</label>
+            <input
+              type="date"
+              value={formData.license_date}
+              onChange={(e) => setFormData({ ...formData, license_date: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+          >
+            登録
+          </button>
+        </form>
+        <div className="mt-4 text-center">
+          <Link href="/login" className="text-blue-500 hover:text-blue-600">
+            すでにアカウントをお持ちの方はこちら
+          </Link>
         </div>
       </div>
     </div>
   );
-} 
+}
