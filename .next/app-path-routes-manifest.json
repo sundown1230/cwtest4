@@ -1,7 +1,1 @@
-{
-  "/_not-found/page": "/_not-found",
-  "/login/page": "/login",
-  "/register/page": "/register",
-  "/page": "/",
-  "/mypage/page": "/mypage"
-}
+{"/_not-found":"/_not-found","/mypage/page":"/mypage","/api/route":"/api","/login/page":"/login","/search/page":"/search","/page":"/","/register/page":"/register"}

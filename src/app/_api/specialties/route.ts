@@ -28,7 +28,7 @@ export async function GET() {
   try {
     return NextResponse.json({
       success: true,
-      specialties
+      data: specialties
     });
   } catch (error) {
     return NextResponse.json({

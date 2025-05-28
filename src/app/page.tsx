@@ -42,8 +42,8 @@ export default function Home() {
         throw new Error('診療科情報の取得に失敗しました');
       }
       const data = await response.json();
-      if (data.success && data.specialties) {
-        setSpecialties(data.specialties);
+      if (data.success && data.data) {
+        setSpecialties(data.data);
       }
     } catch (error) {
       console.error('Failed to fetch specialties:', error);
@@ -57,20 +57,20 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-8">
+          <h1 className="text-4xl md:text-6xl font-bold text-blue-900 mb-8">
             医師と病院のマッチングサービス
           </h1>
-          <p className="text-xl text-white/90 mb-12 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
             あなたのキャリアに最適な病院を見つけましょう。
             経験豊富な医師と、理想的な職場環境をマッチングします。
           </p>
           <div className="space-x-4">
             <Link
               href="/register"
-              className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
+              className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors border border-blue-200"
             >
               新規登録
             </Link>
@@ -84,17 +84,17 @@ export default function Home() {
         </div>
 
         <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 text-white">
-            <h3 className="text-xl font-bold mb-4">簡単な登録</h3>
-            <p>数分で登録完了。あなたの経歴と希望条件を入力するだけです。</p>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+            <h3 className="text-xl font-bold mb-4 text-blue-900">簡単な登録</h3>
+            <p className="text-gray-600">数分で登録完了。あなたの経歴と希望条件を入力するだけです。</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 text-white">
-            <h3 className="text-xl font-bold mb-4">最適なマッチング</h3>
-            <p>AIを活用したマッチングシステムで、あなたに最適な病院をご提案します。</p>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+            <h3 className="text-xl font-bold mb-4 text-blue-900">最適なマッチング</h3>
+            <p className="text-gray-600">AIを活用したマッチングシステムで、あなたに最適な病院をご提案します。</p>
           </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 text-white">
-            <h3 className="text-xl font-bold mb-4">安心のサポート</h3>
-            <p>転職のプロがあなたのキャリアをサポート。条件交渉もお任せください。</p>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100">
+            <h3 className="text-xl font-bold mb-4 text-blue-900">安心のサポート</h3>
+            <p className="text-gray-600">転職のプロがあなたのキャリアをサポート。条件交渉もお任せください。</p>
           </div>
         </div>
 
@@ -145,9 +145,9 @@ export default function Home() {
               {filteredDoctors.map((doctor) => (
                 <div
                   key={doctor.id}
-                  className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+                  className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow border border-blue-100"
                 >
-                  <h3 className="text-lg font-medium text-gray-900">{doctor.name}</h3>
+                  <h3 className="text-lg font-medium text-blue-900">{doctor.name}</h3>
                   <div className="mt-2 space-y-1">
                     <p className="text-sm text-gray-600">
                       性別: {doctor.gender === 'M' ? '男性' : '女性'}
