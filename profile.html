@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医師プロフィール一覧 - Medical Network</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .doctor-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .doctor-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .doctor-info {
+            margin-bottom: 15px;
+        }
+
+        .doctor-specialties {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .specialty-tag {
+            background: #e1f5fe;
+            color: #0288d1;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+        }
+
+        .stats-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>医師プロフィール一覧</h1>
+        
+        <div class="stats-container">
+            <h2>診療科分布</h2>
+            <div class="chart-container">
+                <canvas id="specialtiesChart"></canvas>
+            </div>
+        </div>
+
+        <div id="doctorsList" class="doctors-grid">
+            <div class="loading">読み込み中...</div>
+        </div>
+    </div>
+
+    <script>
+        let specialtiesChart = null;
+
+        function updateSpecialtiesChart(doctors) {
+            // 診療科の集計
+            const specialtyCount = {};
+            doctors.forEach(doctor => {
+                doctor.specialties.forEach(specialty => {
+                    specialtyCount[specialty] = (specialtyCount[specialty] || 0) + 1;
+                });
+            });
+
+            const labels = Object.keys(specialtyCount);
+            const data = Object.values(specialtyCount);
+
+            // 既存のチャートを破棄
+            if (specialtiesChart) {
+                specialtiesChart.destroy();
+            }
+
+            // 新しいチャートを作成
+            const ctx = document.getElementById('specialtiesChart').getContext('2d');
+            specialtiesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '医師数',
+                        data: data,
+                        backgroundColor: 'rgba(52, 152, 219, 0.5)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadDoctors() {
+            try {
+                const response = await fetch('/api/doctors');
+                const data = await response.json();
+
+                const doctorsList = document.getElementById('doctorsList');
+                doctorsList.innerHTML = '';
+
+                if (data.success && data.doctors.length > 0) {
+                    // 診療科分布グラフを更新
+                    updateSpecialtiesChart(data.doctors);
+
+                    data.doctors.forEach(doctor => {
+                        const doctorCard = document.createElement('div');
+                        doctorCard.className = 'doctor-card';
+                        
+                        doctorCard.innerHTML = `
+                            <div class="doctor-name">${doctor.name}</div>
+                            <div class="doctor-info">
+                                <p>性別: ${doctor.gender === 'M' ? '男性' : '女性'}</p>
+                                <p>医師免許取得: ${new Date(doctor.license_date).getFullYear()}年</p>
+                            </div>
+                            <div class="doctor-specialties">
+                                ${doctor.specialties.map(specialty => 
+                                    `<span class="specialty-tag">${specialty}</span>`
+                                ).join('')}
+                            </div>
+                        `;
+                        
+                        doctorsList.appendChild(doctorCard);
+                    });
+                } else {
+                    doctorsList.innerHTML = '<div class="error">医師情報が見つかりませんでした</div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('doctorsList').innerHTML = 
+                    '<div class="error">データの読み込み中にエラーが発生しました</div>';
+            }
+        }
+
+        // ページ読み込み時に医師一覧を取得
+        document.addEventListener('DOMContentLoaded', loadDoctors);
+    </script>
+</body>
+</html> 
