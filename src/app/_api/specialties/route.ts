@@ -26,12 +26,12 @@ const specialties = [
 
 export async function GET() {
   try {
-    return NextResponse.json({
+    return NextResponse.json<ApiResponse<string[]>>({
       success: true,
       data: specialties
     });
   } catch (error) {
-    return NextResponse.json({
+    return NextResponse.json<ApiResponse>({
       success: false,
       error: '診療科情報の取得に失敗しました'
     }, { status: 500 });

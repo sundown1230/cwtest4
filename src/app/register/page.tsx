@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { RegisterRequest, ApiResponse } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
-
 export default function Register() {
   const router = useRouter();
   const [specialties, setSpecialties] = useState<string[]>([]);
@@ -28,17 +26,22 @@ export default function Register() {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/_api/specialties`);
+      setIsLoading(true);
+      const response = await fetch('/api/specialties');
       if (!response.ok) {
         throw new Error('診療科情報の取得に失敗しました');
       }
       const data: ApiResponse<string[]> = await response.json();
-      if (data.success && data.data) {
-        setSpecialties(data.data);
+      if (data.success && data.specialties) {
+        setSpecialties(data.specialties);
+      } else {
+        throw new Error(data.error || '診療科情報の取得に失敗しました');
       }
     } catch (error) {
       console.error('Failed to fetch specialties:', error);
       setError('診療科情報の取得に失敗しました');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -48,7 +51,7 @@ export default function Register() {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
+      const response = await fetch('/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
