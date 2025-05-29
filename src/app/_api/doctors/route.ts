@@ -47,13 +47,13 @@ const mockDoctors: Doctor[] = [
 
 export async function GET() {
   try {
-    return NextResponse.json({
+    return NextResponse.json<ApiResponse<Doctor[]>>({
       success: true,
-      doctors: mockDoctors
+      data: mockDoctors
     });
   } catch (error) {
     console.error('医師一覧取得エラー:', error);
-    return NextResponse.json({
+    return NextResponse.json<ApiResponse>({
       success: false,
       error: '医師一覧の取得に失敗しました'
     }, { status: 500 });

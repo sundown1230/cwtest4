@@ -19,7 +19,7 @@ export default function Home() {
 
   const fetchDoctors = async () => {
     try {
-      const response = await fetch('/_api/doctors');
+      const response = await fetch('/api/doctors');
       if (!response.ok) {
         throw new Error('医師情報の取得に失敗しました');
       }
@@ -37,7 +37,7 @@ export default function Home() {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await fetch('/_api/specialties');
+      const response = await fetch('/api/specialties');
       if (!response.ok) {
         throw new Error('診療科情報の取得に失敗しました');
       }

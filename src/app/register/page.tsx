@@ -32,8 +32,8 @@ export default function Register() {
         throw new Error('診療科情報の取得に失敗しました');
       }
       const data: ApiResponse<string[]> = await response.json();
-      if (data.success && data.specialties) {
-        setSpecialties(data.specialties);
+      if (data.success && data.data) {
+        setSpecialties(data.data);
       } else {
         throw new Error(data.error || '診療科情報の取得に失敗しました');
       }
