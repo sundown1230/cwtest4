@@ -1,28 +1,17 @@
 import { NextResponse } from 'next/server';
 
-// 型定義
-interface Doctor {
+type Doctor = {
   id: number;
   name: string;
   gender: 'M' | 'F';
   birthdate: string;
   license_date: string;
   email: string;
-  password: string;
   specialties: string[];
-}
-
-interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-}
-
-// フロントエンド用の医師情報型
-type DoctorResponse = Omit<Doctor, 'password'>;
+};
 
 // ダミーデータ
-const mockDoctors: Record<number, DoctorResponse> = {
+const mockDoctors: Record<number, Doctor> = {
   1: {
     id: 1,
     name: '山田太郎',
@@ -73,19 +62,19 @@ export async function GET(
     const doctor = mockDoctors[doctorId];
 
     if (!doctor) {
-      return NextResponse.json<ApiResponse>({
+      return NextResponse.json({
         success: false,
         error: '医師情報が見つかりませんでした'
       }, { status: 404 });
     }
 
-    return NextResponse.json<ApiResponse<DoctorResponse>>({
+    return NextResponse.json({
       success: true,
       data: doctor
     });
   } catch (error) {
     console.error('医師情報取得エラー:', error);
-    return NextResponse.json<ApiResponse>({
+    return NextResponse.json({
       success: false,
       error: '医師情報の取得に失敗しました'
     }, { status: 500 });
