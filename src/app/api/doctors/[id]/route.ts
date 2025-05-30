@@ -1,5 +1,22 @@
 import { NextResponse } from 'next/server';
-import type { ApiResponse, Doctor } from '@/types';
+
+// 型定義
+interface Doctor {
+  id: number;
+  name: string;
+  gender: 'M' | 'F';
+  birthdate: string;
+  license_date: string;
+  email: string;
+  password: string;
+  specialties: string[];
+}
+
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
 
 // フロントエンド用の医師情報型
 type DoctorResponse = Omit<Doctor, 'password'>;
@@ -45,7 +62,7 @@ const mockDoctors: Record<number, DoctorResponse> = {
 };
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function GET(
   request: Request,
