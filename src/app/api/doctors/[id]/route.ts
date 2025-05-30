@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ApiResponse, Doctor } from '@/types';
+import type { ApiResponse, Doctor } from '@/types';
 
 // フロントエンド用の医師情報型
 type DoctorResponse = Omit<Doctor, 'password'>;
@@ -45,7 +45,7 @@ const mockDoctors: Record<number, DoctorResponse> = {
 };
 
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 export async function GET(
   request: Request,
