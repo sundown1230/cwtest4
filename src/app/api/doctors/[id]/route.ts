@@ -11,8 +11,8 @@ type Doctor = {
 };
 
 // ダミーデータ
-const mockDoctors: Record<number, Doctor> = {
-  1: {
+const mockDoctors: Record<string, Doctor> = {
+  '1': {
     id: 1,
     name: '山田太郎',
     gender: 'M',
@@ -21,7 +21,7 @@ const mockDoctors: Record<number, Doctor> = {
     email: 'yamada@example.com',
     specialties: ['内科', '消化器科']
   },
-  2: {
+  '2': {
     id: 2,
     name: '佐藤花子',
     gender: 'F',
@@ -30,7 +30,7 @@ const mockDoctors: Record<number, Doctor> = {
     email: 'sato@example.com',
     specialties: ['小児科', 'アレルギー科']
   },
-  3: {
+  '3': {
     id: 3,
     name: '鈴木一郎',
     gender: 'M',
@@ -39,7 +39,7 @@ const mockDoctors: Record<number, Doctor> = {
     email: 'suzuki@example.com',
     specialties: ['外科', '整形外科']
   },
-  4: {
+  '4': {
     id: 4,
     name: '田中優子',
     gender: 'F',
@@ -57,26 +57,17 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const doctorId = parseInt(params.id);
-    const doctor = mockDoctors[doctorId];
+  const doctor = mockDoctors[params.id];
 
-    if (!doctor) {
-      return NextResponse.json({
-        success: false,
-        error: '医師情報が見つかりませんでした'
-      }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: doctor
-    });
-  } catch (error) {
-    console.error('医師情報取得エラー:', error);
+  if (!doctor) {
     return NextResponse.json({
       success: false,
-      error: '医師情報の取得に失敗しました'
-    }, { status: 500 });
+      error: '医師情報が見つかりませんでした'
+    }, { status: 404 });
   }
+
+  return NextResponse.json({
+    success: true,
+    data: doctor
+  });
 } 
