@@ -76,7 +76,7 @@ INSERT INTO specialties (name) VALUES
 
 -- ダミーデータの挿入（パスワードは 'password123' のハッシュ値）
 INSERT INTO doctors (name, gender, birthdate, license_date, email, password_hash) VALUES
-    ('山田太郎', 'M', '1980-01-01', '2005-04-01', 'yamada@example.com', 'GENERATED_HASH_FOR_YAMADA'); /* ここに生成したハッシュ値を入力 */
+    ('山田太郎', 'M', '1980-01-01', '2005-04-01', 'yamada@example.com', '$2a$10$KorusqgH2A6WfX2kXyTjR.cvU.VAqXpWJBCk8xYj3bJkXyTjR.cvU'); /* 'password123' のハッシュ値 */
 
 -- 医師と診療科の関連付け
 INSERT INTO doctor_specialties (doctor_id, specialty_id) VALUES
