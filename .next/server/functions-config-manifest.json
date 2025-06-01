@@ -1,1 +1,1 @@
-{"version":1,"functions":{"/api/doctors":{},"/api/doctors/[id]":{}}}
+{"version":1,"functions":{"/api/specialties":{},"/api/doctors":{},"/api/doctors/[id]":{}}}

@@ -1,15 +1,15 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/api/specialties/route": "app/api/specialties/route.js",
-  "/api/auth/login/route": "app/api/auth/login/route.js",
-  "/doctors/[id]/page": "app/doctors/[id]/page.js",
   "/api/route": "app/api/route.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
+  "/login/page": "app/login/page.js",
   "/mypage/page": "app/mypage/page.js",
   "/mypage/profile/edit/page": "app/mypage/profile/edit/page.js",
+  "/doctors/[id]/page": "app/doctors/[id]/page.js",
+  "/api/doctors/[id]/route": "app/api/doctors/[id]/route.js",
+  "/api/doctors/route": "app/api/doctors/route.js",
+  "/api/specialties/route": "app/api/specialties/route.js",
   "/search/page": "app/search/page.js",
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
-  "/api/doctors/[id]/route": "app/api/doctors/[id]/route.js",
-  "/register/page": "app/register/page.js",
-  "/api/doctors/route": "app/api/doctors/route.js"
+  "/register/page": "app/register/page.js"
 }
