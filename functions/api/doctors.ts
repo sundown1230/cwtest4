@@ -1,34 +1,31 @@
 // functions/api/doctors.ts
 
-// 環境変数を扱う場合の型定義 (任意)
-// interface Env {
-//   YOUR_API_KEY: string;
-//   DB: D1Database;
-// }
+// D1データベースバインディングを含む環境変数の型定義
+interface Env {
+  DB: D1Database; // Pagesプロジェクトで設定したD1バインディング名
+}
 
 // GETリクエストを処理するハンドラ
-// export const onRequestGet: PagesFunction<Env> = async (context) => {
-export const onRequestGet: PagesFunction = async (context) => {
-  // context.env から環境変数にアクセス可能
-  // const apiKey = context.env.YOUR_API_KEY;
-  // const db = context.env.DB;
-
+export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
-    // ここで医師情報を取得するロジックを実装します
-    // 例: 外部APIから取得、D1データベースから取得など
-    // const response = await fetch('https://api.example.com/doctors', {
-    //   headers: { 'Authorization': `Bearer ${apiKey}` }
-    // });
-    // if (!response.ok) {
-    //   throw new Error(`API error: ${response.statusText}`);
-    // }
-    // const data = await response.json();
+    // D1データベースから医師情報を取得
+    const db = context.env.DB;
+    const stmt = db.prepare("SELECT id, name, specialty FROM doctors"); // テーブル名やカラム名は実際の構成に合わせてください
+    const { results } = await stmt.all();
 
-    // ダミーデータ
-    const doctorsData = [
-      { id: 1, name: "田中 一郎", specialty: "内科" },
-      { id: 2, name: "佐藤 花子", specialty: "小児科" },
-    ];
+    if (!results) {
+      console.error("D1 query returned no results or failed without throwing an error.");
+      return new Response(JSON.stringify({ error: "データベースから情報を取得できませんでした。", message: "No results" }), {
+        status: 404, // Not Found or 500 Internal Server Error depending on expectation
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*', // 開発中は '*'、本番では適切なオリジンを指定
+        },
+      });
+    }
+
+    const doctorsData = results;
+    console.log("Fetched doctors data:", doctorsData);
 
     return new Response(JSON.stringify(doctorsData), {
       headers: {
@@ -39,9 +36,15 @@ export const onRequestGet: PagesFunction = async (context) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching doctors:", error);
+    // エラーの詳細をログに出力
+    console.error("Error fetching doctors from D1:", error);
+    let errorMessage = "医師情報の取得に失敗しました。";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
     // エラーレスポンスを返す
-    return new Response(JSON.stringify({ error: "医師情報の取得に失敗しました。", message: error.message }), {
+    return new Response(JSON.stringify({ error: "医師情報の取得に失敗しました。", message: errorMessage }), {
       status: 500, // Internal Server Error
       headers: {
         'Content-Type': 'application/json',
@@ -50,6 +53,3 @@ export const onRequestGet: PagesFunction = async (context) => {
     });
   }
 };
-
-// POST, PUT, DELETEなどの他のメソッドも同様に定義できます
-// export const onRequestPost: PagesFunction = async (context) => { /* ... */ };
