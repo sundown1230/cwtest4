@@ -20,9 +20,11 @@ export default function DoctorProfile() {
   const [skillMap, setSkillMap] = useState<SkillMap[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [specialties, setSpecialties] = useState([]);
 
   useEffect(() => {
     fetchDoctorProfile();
+    fetchSpecialties();
   }, [params.id]);
 
   const fetchDoctorProfile = async () => {
@@ -83,6 +85,16 @@ export default function DoctorProfile() {
       setError('医師情報の取得に失敗しました');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchSpecialties = async () => {
+    try {
+      const response = await fetch('http://localhost:8787/specialties');
+      const data = await response.json();
+      setSpecialties(data);
+    } catch (error) {
+      console.error('Failed to fetch specialties:', error);
     }
   };
 
