@@ -14,22 +14,23 @@ CREATE TABLE specialties (
 );
 
 -- 初期データ: 一般的な診療科を追加
-INSERT INTO specialties (name) VALUES 
-    ('内科'), ('外科'), ('整形外科'), ('小児科'), ('産婦人科'),
-    ('眼科'), ('耳鼻咽喉科'), ('皮膚科'), ('精神科'), ('歯科');
+-- 初期データは重複を避けるため、一度にまとめて挿入するか、存在しない場合のみ挿入するロジックを推奨しますが、
+-- ここでは既存のINSERT文を整理し、追加の診療科を明確にします。
+-- 既存のINSERT文は一度削除し、必要なものをまとめて再挿入します。
+DELETE FROM specialties; -- 既存のデータを一度クリアする場合（注意：本番環境では慎重に）
 
 -- 医師テーブル
 CREATE TABLE IF NOT EXISTS doctors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_type_id INTEGER NOT NULL DEFAULT 1, -- 1: doctor
     name TEXT NOT NULL,
-    gender TEXT NOT NULL CHECK (gender IN ('M', 'F')),
+    gender TEXT CHECK (gender IN ('M', 'F', 'O', 'N')), -- 性別の選択肢を増やすことも検討
     birthdate DATE NOT NULL,
     license_date DATE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- SQLiteでは TIMESTAMP は DATETIME のエイリアス
     FOREIGN KEY (user_type_id) REFERENCES user_types(id)
 );
 
@@ -48,26 +49,30 @@ CREATE INDEX idx_doctors_user_type ON doctors(user_type_id);
 
 -- 診療科データの挿入
 INSERT INTO specialties (name) VALUES
-    ('内科'),
-    ('外科'),
-    ('小児科'),
-    ('産婦人科'),
+    ('総合内科'), ('循環器内科'), ('消化器内科'), ('呼吸器内科'), ('糖尿病・内分泌内科'),
+    ('腎臓内科'), ('神経内科'), ('血液内科'), ('リウマチ科'), ('アレルギー科'),
+    ('一般外科'), ('消化器外科'), ('心臓血管外科'), ('呼吸器外科'), ('脳神経外科'),
+    ('整形外科'), ('形成外科'), ('美容外科'), ('リハビリテーション科'),
+    ('小児科'), ('小児外科'),
+    ('産婦人科'), ('産科'), ('婦人科'),
+    ('精神科'), ('心療内科'),
+    ('皮膚科'), ('美容皮膚科'),
     ('眼科'),
     ('耳鼻咽喉科'),
-    ('皮膚科'),
-    ('精神科'),
-    ('整形外科'),
-    ('脳神経外科'),
-    ('心臓血管外科'),
-    ('呼吸器外科'),
-    ('消化器外科'),
     ('泌尿器科'),
-    ('放射線科'),
+    ('放射線科'), ('放射線治療科'), ('画像診断科'),
     ('麻酔科'),
+    ('救急科'),
     ('病理診断科'),
     ('臨床検査科'),
-    ('救急科'),
-    ('総合診療科');
+    ('歯科'), ('口腔外科'), ('矯正歯科'), ('小児歯科'),
+    ('漢方内科'),
+    ('感染症内科'),
+    ('緩和ケア内科'),
+    ('老年内科'),
+    ('ペインクリニック科'),
+    ('人間ドック・健診');
+
 
 -- ダミーデータの挿入（パスワードは 'password123' のハッシュ値）
 INSERT INTO doctors (name, gender, birthdate, license_date, email, password_hash) VALUES
