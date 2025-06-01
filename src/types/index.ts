@@ -1,14 +1,23 @@
 // 医師の基本情報
 export interface Doctor {
   id: number;
+  user_type_id?: number; // doctors.ts の Doctor 型と合わせるか、必要に応じて調整
   name: string;
-  gender: 'M' | 'F';
-  birthdate: string;
-  license_date: string;
+  gender: 'M' | 'F' | 'O' | 'N'; // schema.sql の CHECK 制約と合わせる
+  birthdate: string; // ISO 8601 date string (YYYY-MM-DD)
+  license_date: string; // ISO 8601 date string (YYYY-MM-DD)
   email: string;
-  password: string;
-  specialties: string[];
+  // password_hash は通常フロントエンドには含めません
+  created_at?: string; // ISO 8601 datetime string
+  updated_at?: string; // ISO 8601 datetime string
+  specialties?: Specialty[] | string[]; // APIのレスポンス形式に合わせる
 }
+
+export interface Specialty {
+  id: number;
+  name: string;
+}
+
 
 // 新規登録時のリクエスト
 export interface RegisterRequest {
