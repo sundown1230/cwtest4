@@ -1,0 +1,49 @@
+name = "cwtest4"
+main = "src/workers/doctors.ts"
+compatibility_date = "2024-01-01"
+
+# ローカル開発用の設定
+[dev]
+port = 8787
+local_protocol = "http"
+
+# D1データベースの設定
+[[d1_databases]]
+binding = "DB"
+database_name = "doctor_matching"
+database_id = "53cf0f3d-0839-4df7-9723-4c63ac99ee10"
+
+# 静的ファイルの設定
+[site]
+bucket = "./"
+
+# 環境変数
+[vars]
+JWT_SECRET = "50ed1ca190a3a4188a611a33187de9ca9845d1cabfd5e758d5c2561904d20669f1f32c8f69987051c009f769900b0a7709a3a27da207b1d91eefa1c5bec2fc91"
+API_KEY = "your-secret-api-key-123"
+NEXT_PUBLIC_API_URL = "http://localhost:3000"
+DATABASE_URL = "file:./doctor_matching.db"
+CLOUDFLARE_ACCOUNT_ID = "your-account-id"
+CLOUDFLARE_API_TOKEN = "your-api-token"
+
+# ビルド設定
+[build]
+command = "npm run build:workers"
+
+# 本番環境の設定
+[env.production]
+name = "cwtest4"
+route = "cwtest4.pages.dev"
+workers_dev = false
+
+# ルート設定
+routes = [
+  { pattern = "/api/doctors/*", custom_domain = "cwtest4.cool-credit-5ae4.workers.dev" }
+]
+
+
+# CORSの設定
+[cors]
+allowed_origins = ["http://localhost:3000"]
+allowed_methods = ["GET", "POST", "PUT", "DELETE"]
+allowed_headers = ["Content-Type", "X-API-Key"]

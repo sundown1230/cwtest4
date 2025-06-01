@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "target": "ES2020",
+      "module": "ES2020",
+      "lib": ["ES2020"],
+      "types": ["@cloudflare/workers-types"],
+      "moduleResolution": "node",
+      "strict": true,
+      "noEmit": false,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "outDir": "dist/workers"
+    },
+    "include": ["src/workers/**/*"],
+    "exclude": ["node_modules"]
+  }

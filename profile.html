@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医師プロフィール</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        医師プロフィール
+                    </h3>
+                    <div class="mt-5">
+                        <div id="error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-4"></div>
+                        <div id="profile" class="space-y-6">
+                            <!-- プロフィール情報はJavaScriptで動的に追加 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // プロフィール情報の取得と表示
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/doctors/me');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const profileContainer = document.getElementById('profile');
+                    const doctor = data.doctor;
+                    
+                    profileContainer.innerHTML = `
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">お名前</label>
+                                <div class="mt-1 text-sm text-gray-900">${doctor.name}</div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">性別</label>
+                                <div class="mt-1 text-sm text-gray-900">${doctor.gender === 'M' ? '男性' : '女性'}</div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">生年月日</label>
+                                <div class="mt-1 text-sm text-gray-900">${new Date(doctor.birthdate).toLocaleDateString()}</div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">医師免許取得日</label>
+                                <div class="mt-1 text-sm text-gray-900">${new Date(doctor.license_date).toLocaleDateString()}</div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">メールアドレス</label>
+                                <div class="mt-1 text-sm text-gray-900">${doctor.email}</div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">専門分野</label>
+                                <div class="mt-1 text-sm text-gray-900">${doctor.specialties.join(', ')}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const errorDiv = document.getElementById('error');
+                    errorDiv.textContent = data.error || 'プロフィールの取得に失敗しました';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = 'プロフィールの取得に失敗しました';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // ページ読み込み時にプロフィールを取得
+        loadProfile();
+    </script>
+</body>
+</html> 

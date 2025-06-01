@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医師登録</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                医師登録
+            </h2>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                <form id="registerForm" class="space-y-6">
+                    <div id="error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded"></div>
+
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">
+                            お名前
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="gender" class="block text-sm font-medium text-gray-700">
+                            性別
+                        </label>
+                        <select
+                            id="gender"
+                            name="gender"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        >
+                            <option value="M">男性</option>
+                            <option value="F">女性</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="birthdate" class="block text-sm font-medium text-gray-700">
+                            生年月日
+                        </label>
+                        <input
+                            type="date"
+                            id="birthdate"
+                            name="birthdate"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="license_date" class="block text-sm font-medium text-gray-700">
+                            医師免許取得日
+                        </label>
+                        <input
+                            type="date"
+                            id="license_date"
+                            name="license_date"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">
+                            専門分野
+                        </label>
+                        <div id="specialties" class="mt-2 space-y-2">
+                            <!-- 専門分野のチェックボックスはJavaScriptで動的に追加 -->
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">
+                            メールアドレス
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">
+                            パスワード
+                        </label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary"
+                        />
+                    </div>
+
+                    <div>
+                        <button
+                            type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                        >
+                            登録
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">
+                                すでにアカウントをお持ちの方は
+                                <a href="/login" class="font-medium text-primary hover:text-primary/90">
+                                    ログイン
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 専門分野の取得と表示
+        async function loadSpecialties() {
+            try {
+                const response = await fetch('/api/specialties');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const specialtiesContainer = document.getElementById('specialties');
+                    data.specialties.forEach(specialty => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center';
+                        div.innerHTML = `
+                            <input
+                                type="checkbox"
+                                id="specialty-${specialty.id}"
+                                name="specialties"
+                                value="${specialty.id}"
+                                class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            />
+                            <label for="specialty-${specialty.id}" class="ml-2 block text-sm text-gray-900">
+                                ${specialty.name}
+                            </label>
+                        `;
+                        specialtiesContainer.appendChild(div);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading specialties:', error);
+            }
+        }
+
+        // フォーム送信の処理
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const errorDiv = document.getElementById('error');
+            errorDiv.classList.add('hidden');
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                gender: document.getElementById('gender').value,
+                birthdate: document.getElementById('birthdate').value,
+                license_date: document.getElementById('license_date').value,
+                specialties: Array.from(document.querySelectorAll('input[name="specialties"]:checked')).map(cb => parseInt(cb.value)),
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('/api/doctors/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = '/login';
+                } else {
+                    errorDiv.textContent = data.error || '登録に失敗しました';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                errorDiv.textContent = '登録に失敗しました';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // ページ読み込み時に専門分野を取得
+        loadSpecialties();
+    </script>
+</body>
+</html> 
