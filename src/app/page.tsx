@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Doctor } from '@/types';
+import { Doctor, Specialty } from '@/types'; // Specialty 型をインポート（必要に応じて型定義ファイルで定義）
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -9,7 +9,7 @@ export default function Home() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
-  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [specialties, setSpecialties] = useState<Specialty[]>([]); // 型を Specialty[] に変更
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -62,12 +62,17 @@ export default function Home() {
         throw new Error('診療科情報の取得に失敗しました');
       }
       
-      const data = await response.json();
-      if (data.success && data.data) {
-        setSpecialties(data.data);
+      // APIは診療科の配列を直接返すため、そのように処理する
+      const data: Specialty[] = await response.json(); // 型を Specialty[] に変更
+      if (Array.isArray(data)) {
+        setSpecialties(data);
       } else {
-        throw new Error(data.error || '診療科情報の取得に失敗しました');
+        // APIがエラーオブジェクトを返す場合（例: { error: "..." }）も考慮
+        // このAPI (src/app/api/specialties/route.ts) の場合、エラー時は { error: "...", message: "..." } を返す
+        const errorData = data as any; // 一時的にany型としてアクセス
+        throw new Error(errorData.error || errorData.message || '診療科情報の形式が正しくありません');
       }
+
     } catch (error) {
       console.error('Failed to fetch specialties:', error);
       setError('診療科情報の取得に失敗しました');
@@ -171,8 +176,8 @@ export default function Home() {
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">全ての診療科</option>
-                {specialties.map((specialty) => (
-                  <option key={specialty} value={specialty}>
+                {specialties.map((specialty) => ( // specialty オブジェクトの name プロパティを使用
+                  <option key={specialty.id} value={specialty.name}>
                     {specialty}
                   </option>
                 ))}

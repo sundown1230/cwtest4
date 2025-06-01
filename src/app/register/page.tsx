@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { RegisterRequest, ApiResponse } from '@/types';
+import { RegisterRequest, ApiResponse, Specialty } from '@/types'; // Specialty 型をインポート
 
 export default function Register() {
   const router = useRouter();
-  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [specialties, setSpecialties] = useState<Specialty[]>([]); // 型を Specialty[] に変更
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<RegisterRequest>({
@@ -31,12 +31,16 @@ export default function Register() {
       if (!response.ok) {
         throw new Error('診療科情報の取得に失敗しました');
       }
-      const data: ApiResponse<string[]> = await response.json();
-      if (data.success && data.data) {
-        setSpecialties(data.data);
+      // APIは診療科の配列を直接返すため、そのように処理する
+      const data: Specialty[] = await response.json(); // 型を Specialty[] に変更
+      if (Array.isArray(data)) {
+        setSpecialties(data);
       } else {
-        throw new Error(data.error || '診療科情報の取得に失敗しました');
+        // APIがエラーオブジェクトを返す場合（例: { error: "..." }）も考慮
+        const errorData = data as any; // 一時的にany型としてアクセス
+        throw new Error(errorData.error || errorData.message || '診療科情報の形式が正しくありません');
       }
+
     } catch (error) {
       console.error('Failed to fetch specialties:', error);
       setError('診療科情報の取得に失敗しました');
@@ -157,8 +161,8 @@ export default function Register() {
               disabled={isLoading}
             >
               <option value="">選択してください</option>
-              {specialties.map((specialty) => (
-                <option key={specialty} value={specialty}>
+              {specialties.map((specialty) => ( // specialty オブジェクトの name プロパティを使用
+                <option key={specialty.id} value={specialty.name}>
                   {specialty}
                 </option>
               ))}
