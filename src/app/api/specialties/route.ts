@@ -1,4 +1,4 @@
-// src/app/_api/specialties/route.ts
+// src/app/api/specialties/route.ts
 import { NextResponse } from 'next/server';
 
 // D1データベースの型をインポート
@@ -8,6 +8,8 @@ import type { D1Database } from '@cloudflare/workers-types';
 interface Env {
   DB: D1Database; // Pagesプロジェクトで設定したD1バインディング名
 }
+
+export const dynamic = "force-dynamic"; // このルートが動的であることを明示
 
 export async function GET() {
   try {
