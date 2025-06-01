@@ -1,8 +1,8 @@
 // src/app/_api/specialties/route.ts
 import { NextResponse } from 'next/server';
 
-// D1データベースの型をインポート（またはグローバルで利用可能であれば不要）
-// import type { D1Database } from '@cloudflare/workers-types';
+// D1データベースの型をインポート
+import type { D1Database } from '@cloudflare/workers-types';
 
 // 環境変数の型定義 (任意ですが推奨)
 interface Env {
