@@ -31,8 +31,10 @@ export default function Register() {
       if (!response.ok) {
         throw new Error('診療科情報の取得に失敗しました');
       }
+      console.log('Response from /api/specialties:', response);
       // APIは診療科の配列を直接返すため、そのように処理する
       const data: Specialty[] = await response.json(); // 型を Specialty[] に変更
+      console.log('Data from /api/specialties after json():', data);
       if (Array.isArray(data)) {
         setSpecialties(data);
       } else {
