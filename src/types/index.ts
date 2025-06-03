@@ -63,3 +63,17 @@ export interface User {
   created_at: string;
   updated_at: string;
 } 
+
+// データベースの doctors テーブルのレコードを表す型 (サーバーサイド用)
+export interface DoctorDbRecord {
+  id: number;
+  user_type_id: number;
+  name: string;
+  gender: 'M' | 'F' | 'O' | 'N';
+  birthdate: string; // ISO 8601 date string (YYYY-MM-DD)
+  license_date: string; // ISO 8601 date string (YYYY-MM-DD)
+  email: string;
+  password_hash: string; // 認証に使用するパスワードハッシュ
+  created_at: string; // ISO 8601 datetime string
+  updated_at: string; // ISO 8601 datetime string
+}

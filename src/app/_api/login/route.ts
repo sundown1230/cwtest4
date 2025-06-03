@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { generateToken, verifyPassword } from '@/utils/auth';
 import { LoginRequest, ApiResponse, Doctor } from '@/types';
+import { DoctorDbRecord } from '@/types'; // DoctorDbRecord をインポート
+
 
 export async function POST(request: Request) {
   try {
