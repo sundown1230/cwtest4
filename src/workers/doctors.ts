@@ -1,5 +1,6 @@
 // src/workers/doctors.ts
-import { ExecutionContext } from '@cloudflare/workers-types';
+import { ExecutionContext, D1Database } from '@cloudflare/workers-types'; // Import D1Database
+import { ApiResponse, Doctor, Specialty } from '@/types'; // 共有型をインポート
 
 interface Env {
   JWT_SECRET: string;
