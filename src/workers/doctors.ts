@@ -1,7 +1,5 @@
 // src/workers/doctors.ts
 import { ExecutionContext } from '@cloudflare/workers-types';
-import bcrypt from 'bcryptjs'; // bcryptjsをインポート
-import { RegisterRequest, ApiResponse } from '@/types'; // 型定義をインポート
 
 interface Env {
   JWT_SECRET: string;
@@ -9,25 +7,14 @@ interface Env {
   DB: D1Database; // D1データベースのバインディング
 }
 
-interface WorkerDoctor { // ローカル型名の変更を推奨 (例: WorkerDoctor)
+interface WorkerDoctor { // このWorkerが返す医師情報の型
   id: number;
   name: string;
-  gender: 'M' | 'F' | 'O' | 'N'; // 修正: D1スキーマとRegisterRequestに合わせる
+  gender: 'M' | 'F' | 'O' | 'N';
   birthdate: string;
   license_date: string;
   email: string;
   specialties: string[];
-}
-
-// データベース保存用の型 (password_hash を含む)
-interface WorkerDoctorRecord extends Omit<WorkerDoctor, 'specialties' | 'id'> { // WorkerDoctor を使用
-  user_type_id: number;
-  password_hash: string;
-  // specialties は doctor_specialties テーブルで管理
-  // id は自動インクリメント
-  // created_at, updated_at はDBのデフォルト値
-  // gender, birthdate, license_date は RegisterRequest から取得
-  // gender は WorkerDoctor で修正済み
 }
 
 const mockDoctors: Record<string, WorkerDoctor> = { // WorkerDoctor を使用
@@ -67,57 +54,6 @@ export default {
     //     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     //   });
     // }
-
-    // ユーザー登録処理 (/api/register)
-    if (path === '/api/register' && request.method === 'POST') {
-      try {
-        const body = await request.json<RegisterRequest>();
-
-        // 簡単なバリデーション (より堅牢なバリデーションライブラリの使用を推奨)
-        if (!body.email || !body.password || !body.name || !body.gender || !body.birthdate || !body.license_date || !body.specialties) {
-          return new Response(JSON.stringify({ success: false, error: '必須項目が不足しています' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        // パスワードのハッシュ化
-        const saltRounds = 10;
-        const password_hash = await bcrypt.hash(body.password, saltRounds);
-
-        // D1データベースに医師情報を挿入
-        const doctorData: Omit<WorkerDoctorRecord, 'id'> = { // WorkerDoctorRecord を使用
-          user_type_id: 1, // デフォルトで医師
-          name: body.name,
-          gender: body.gender, // body.gender は 'M' | 'F' | 'O' | 'N' であり、修正後の WorkerDoctorRecord と一致
-          birthdate: body.birthdate,
-          license_date: body.license_date,
-          email: body.email,
-          password_hash: password_hash,
-        };
-
-        const { results } = await env.DB.prepare(
-          "INSERT INTO doctors (user_type_id, name, gender, birthdate, license_date, email, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        )
-        .bind(doctorData.user_type_id, doctorData.name, doctorData.gender, doctorData.birthdate, doctorData.license_date, doctorData.email, doctorData.password_hash)
-        .run();
-        
-        // TODO: specialties を doctor_specialties テーブルに保存する処理を追加
-        // const insertedDoctorId = results.lastRowId; (SQLiteの場合、lastRowIdで取得できるか確認)
-        // body.specialties をループして、insertedDoctorId と共に doctor_specialties に挿入
-
-        return new Response(JSON.stringify({ success: true, message: 'ユーザー登録が成功しました' }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-
-      } catch (e: any) {
-        console.error('登録エラー:', e);
-        return new Response(JSON.stringify({ success: false, error: '登録処理中にエラーが発生しました', details: e.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    }
 
     // OPTIONSリクエストの処理
     if (request.method === 'OPTIONS') {

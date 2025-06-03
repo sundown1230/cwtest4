@@ -5,6 +5,7 @@ import { ApiResponse, Doctor } from '@/types';
 const mockDoctors: Doctor[] = [
   {
     id: 1,
+    user_type_id: 1,
     name: '山田太郎',
     gender: 'M',
     birthdate: '1980-01-01',
@@ -14,6 +15,7 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: 2,
+    user_type_id: 1,
     name: '佐藤花子',
     gender: 'F',
     birthdate: '1985-06-15',
@@ -23,6 +25,7 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: 3,
+    user_type_id: 1,
     name: '鈴木一郎',
     gender: 'M',
     birthdate: '1975-03-20',
@@ -32,6 +35,7 @@ const mockDoctors: Doctor[] = [
   },
   {
     id: 4,
+    user_type_id: 1,
     name: '田中優子',
     gender: 'F',
     birthdate: '1988-12-05',

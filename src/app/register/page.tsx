@@ -55,7 +55,7 @@ export default function Register() {
     setError('');
 
     try {
-      const response = await fetch('/register', {
+      const response = await fetch('/api/register', { // APIルートのパスを修正
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ export default function Register() {
 
       const data = await response.json() as ApiResponse;
 
-      if (response.ok) {
+      if (response.ok && data.success) { // data.success も確認
         router.push('/login');
       } else {
         setError(data.error || '登録に失敗しました');
@@ -121,6 +121,8 @@ export default function Register() {
             >
               <option value="M">男性</option>
               <option value="F">女性</option>
+              <option value="O">その他</option>
+              <option value="N">回答しない</option>
             </select>
           </div>
 
@@ -155,7 +157,10 @@ export default function Register() {
             <select
               name="specialties"
               value={formData.specialties[0] || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, specialties: [e.target.value] }))}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData(prev => ({ ...prev, specialties: value ? [value] : [] }));
+              }}
               className="w-full px-3 py-2 rounded border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               required
               disabled={isLoading}
@@ -163,7 +168,7 @@ export default function Register() {
               <option value="">選択してください</option>
               {specialties.map((specialty) => ( // specialty オブジェクトの name プロパティを使用
                 <option key={specialty.id} value={specialty.name}>
-                  {specialty}
+                  {specialty.name} 
                 </option>
               ))}
             </select>
