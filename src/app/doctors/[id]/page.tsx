@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, Key } from 'react';
-import { useParams } from 'next/navigation';
-import { Doctor } from '@/types';
+import { useParams } from 'next/navigation'; // Specialty 型をインポート
+import { Doctor, Specialty } from '@/types';
 import Link from 'next/link';
 
 // スキルマップの型定義
