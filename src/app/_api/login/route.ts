@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { generateToken, verifyPassword } from '@/utils/auth';
-import { LoginRequest, ApiResponse, Doctor } from '@/types';
+import { LoginRequest, ApiResponse } from '@/types';
 import { DoctorDbRecord } from '@/types'; // DoctorDbRecord をインポート
+
+// D1Database型をインポート (Cloudflare Pages Functions環境を想定)
+// 実際の環境に合わせて調整が必要な場合があります
+import type { D1Database } from '@cloudflare/workers-types';
+
 
 
 export async function POST(request: Request) {
@@ -9,10 +14,21 @@ export async function POST(request: Request) {
     const body: LoginRequest = await request.json();
     const { email, password } = body;
 
-    // データベースからユーザーを取得
-    const response = await fetch(`${process.env.API_URL}/api/doctors?email=${email}`);
-    const result = await response.json() as ApiResponse<Doctor[]>;
-    const user = result.data?.[0];
+    // D1データベースのバインディングを取得 (環境変数経由などを想定)
+    // これはCloudflare Pages Functionsの環境での典型的な方法です。
+    // process.env.DB の型アサーションは、環境でDBがD1Databaseとして提供されることを前提としています。
+    const DB = process.env.DB as D1Database;
+    if (!DB) {
+      console.error('D1 Database binding (DB) not found.');
+      return NextResponse.json<ApiResponse>({ success: false, error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // データベースからユーザーを取得 (password_hash を含む)
+    const stmt = DB.prepare('SELECT * FROM doctors WHERE email = ?');
+    const userResult = await stmt.bind(email).first<DoctorDbRecord>();
+
+    // D1の .first<T>() は結果がない場合 null を返す
+    const user = userResult;
 
     if (!user) {
       return NextResponse.json<ApiResponse>({
@@ -22,7 +38,7 @@ export async function POST(request: Request) {
     }
 
     // パスワードを検証
-    const isValid = await verifyPassword(password, user.password);
+    const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
       return NextResponse.json<ApiResponse>({
         success: false,
