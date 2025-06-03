@@ -6,18 +6,26 @@ import { DoctorDbRecord } from '@/types'; // DoctorDbRecord をインポート
 // D1Database型をインポート (Cloudflare Pages Functions環境を想定)
 // 実際の環境に合わせて調整が必要な場合があります
 import type { D1Database } from '@cloudflare/workers-types';
+import type { NextApiRequest, NextApiResponse } from 'next'; // NextApiResponse は不要かもしれないが、コンテキストの型付けのため
 
+// Cloudflare Pages Functions のコンテキストの型を定義（または適切な型をインポート）
+interface PagesFunctionContext {
+  params: Record<string, string | string[]>;
+  request: Request;
+  env: {
+    DB: D1Database; // D1バインディング
+    // 他のバインディングや環境変数があればここに追加
+  };
+  next: (input?: Request | string, init?: RequestInit) => Promise<Response>;
+  data: Record<string, unknown>;
+}
 
-
-export async function POST(request: Request) {
+export async function POST(request: Request, context: PagesFunctionContext) { // context引数を追加
   try {
     const body: LoginRequest = await request.json();
     const { email, password } = body;
 
-    // D1データベースのバインディングを取得 (環境変数経由などを想定)
-    // これはCloudflare Pages Functionsの環境での典型的な方法です。
-    // process.env.DB の型アサーションは、環境でDBがD1Databaseとして提供されることを前提としています。
-    const DB = process.env.DB as D1Database;
+    const DB = context.env.DB; // context.env からDBバインディングを取得
     if (!DB) {
       console.error('D1 Database binding (DB) not found.');
       return NextResponse.json<ApiResponse>({ success: false, error: 'Server configuration error' }, { status: 500 });
