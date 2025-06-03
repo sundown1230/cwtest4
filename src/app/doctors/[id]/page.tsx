@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Key } from 'react';
 import { useParams } from 'next/navigation';
 import { Doctor } from '@/types';
 import Link from 'next/link';
@@ -20,7 +20,7 @@ export default function DoctorProfile() {
   const [skillMap, setSkillMap] = useState<SkillMap[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [specialties, setSpecialties] = useState([]);
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
 
   useEffect(() => {
     fetchDoctorProfile();
@@ -162,7 +162,12 @@ export default function DoctorProfile() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">性別</p>
-                      <p className="text-gray-900">{doctor.gender === 'M' ? '男性' : '女性'}</p>
+                      <p className="text-gray-900">{
+                        doctor.gender === 'M' ? '男性' :
+                        doctor.gender === 'F' ? '女性' :
+                        doctor.gender === 'O' ? 'その他' :
+                        doctor.gender === 'N' ? '回答しない' : '不明'
+                      }</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">生年月日</p>
@@ -182,7 +187,7 @@ export default function DoctorProfile() {
                   <h2 className="text-lg font-semibold text-gray-700 mb-2">専門分野</h2>
                   <div className="flex flex-wrap gap-2">
                        {(doctor.specialties ?? []).map((specialtyItem) => {
-                         const key = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.id;
+                         const key: Key = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.id;
                          const displayName = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.name;
                          return (
                            <span

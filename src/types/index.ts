@@ -56,7 +56,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  gender: 'M' | 'F';
+  gender: 'M' | 'F' | 'O' | 'N';
   birthdate: string;
   license_date: string;
   specialties: string[];

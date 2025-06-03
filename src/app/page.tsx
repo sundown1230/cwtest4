@@ -236,14 +236,18 @@ export default function Home() {
                       医師免許取得日: {new Date(doctor.license_date).toLocaleDateString('ja-JP')}
                     </p>
                         <div className="flex flex-wrap gap-2 mt-3">
-                          {doctor.specialties.map((specialty) => (
-                            <span
-                              key={specialty}
-                              className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs"
-                            >
-                              {specialty}
-                            </span>
-                          ))}
+                          {(doctor.specialties ?? []).map((specialtyItem) => {
+                            const key = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.id;
+                            const displayName = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.name;
+                            return (
+                              <span
+                                key={key}
+                                className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs"
+                              >
+                                {displayName}
+                              </span>
+                            );
+                          })}
                         </div>
                   </div>
                     </Link>

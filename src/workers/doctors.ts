@@ -9,28 +9,28 @@ interface Env {
   DB: D1Database; // D1データベースのバインディング
 }
 
-interface Doctor {
+interface WorkerDoctor { // ローカル型名の変更を推奨 (例: WorkerDoctor)
   id: number;
   name: string;
-  gender: 'M' | 'F';
+  gender: 'M' | 'F' | 'O' | 'N'; // 修正: D1スキーマとRegisterRequestに合わせる
   birthdate: string;
   license_date: string;
   email: string;
   specialties: string[];
-  // password_hash はAPIレスポンスには含めないが、DB操作時には必要
 }
 
 // データベース保存用の型 (password_hash を含む)
-interface DoctorRecord extends Omit<Doctor, 'specialties' | 'id'> {
+interface WorkerDoctorRecord extends Omit<WorkerDoctor, 'specialties' | 'id'> { // WorkerDoctor を使用
   user_type_id: number;
   password_hash: string;
   // specialties は doctor_specialties テーブルで管理
   // id は自動インクリメント
   // created_at, updated_at はDBのデフォルト値
   // gender, birthdate, license_date は RegisterRequest から取得
+  // gender は WorkerDoctor で修正済み
 }
 
-const mockDoctors: Record<string, Doctor> = {
+const mockDoctors: Record<string, WorkerDoctor> = { // WorkerDoctor を使用
   '1': {
     id: 1,
     name: '山田太郎',
@@ -86,10 +86,10 @@ export default {
         const password_hash = await bcrypt.hash(body.password, saltRounds);
 
         // D1データベースに医師情報を挿入
-        const doctorData: Omit<DoctorRecord, 'id'> = {
+        const doctorData: Omit<WorkerDoctorRecord, 'id'> = { // WorkerDoctorRecord を使用
           user_type_id: 1, // デフォルトで医師
           name: body.name,
-          gender: body.gender, // RegisterRequest の gender 型を 'M' | 'F' | 'O' | 'N' に合わせる必要あり
+          gender: body.gender, // body.gender は 'M' | 'F' | 'O' | 'N' であり、修正後の WorkerDoctorRecord と一致
           birthdate: body.birthdate,
           license_date: body.license_date,
           email: body.email,
