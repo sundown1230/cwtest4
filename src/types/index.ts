@@ -50,6 +50,7 @@ export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+  message?: string; // 成功メッセージや補足情報用のオプショナルなプロパティを追加
 }
 
 export interface User {

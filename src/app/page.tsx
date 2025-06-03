@@ -226,8 +226,12 @@ export default function Home() {
                   <h3 className="text-lg font-medium text-blue-900">{doctor.name}</h3>
                       </div>
                       <div className="space-y-2">
-                    <p className="text-sm text-gray-600">
-                      性別: {doctor.gender === 'M' ? '男性' : '女性'}
+                    <p className="text-sm text-gray-600">性別: {
+                        doctor.gender === 'M' ? '男性' :
+                        doctor.gender === 'F' ? '女性' :
+                        doctor.gender === 'O' ? 'その他' :
+                        doctor.gender === 'N' ? '回答しない' : '不明'
+                      }
                     </p>
                     <p className="text-sm text-gray-600">
                       生年月日: {new Date(doctor.birthdate).toLocaleDateString('ja-JP')}
