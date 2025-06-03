@@ -22,7 +22,7 @@ export interface Specialty {
 // 新規登録時のリクエスト
 export interface RegisterRequest {
   name: string;
-  gender: 'M' | 'F';
+  gender: 'M' | 'F' | 'O' | 'N'; // schema.sql の doctors テーブルの gender CHECK 制約と合わせる
   birthdate: string;
   license_date: string;
   specialties: string[];
