@@ -181,14 +181,18 @@ export default function DoctorProfile() {
                 <div>
                   <h2 className="text-lg font-semibold text-gray-700 mb-2">専門分野</h2>
                   <div className="flex flex-wrap gap-2">
-                       {(doctor.specialties ?? []).map((specialty) => (
-                      <span
-                        key={specialty}
-                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                      >
-                        {specialty}
-                      </span>
-                    ))}
+                       {(doctor.specialties ?? []).map((specialtyItem) => {
+                         const key = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.id;
+                         const displayName = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.name;
+                         return (
+                           <span
+                            key={key}
+                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                           >
+                            {displayName}
+                           </span>
+                         );
+                       })}
                   </div>
                 </div>
               </div>
