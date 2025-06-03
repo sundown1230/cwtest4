@@ -184,7 +184,7 @@ export default function Home() {
                 <option value="">全ての診療科</option>
                 {specialties.map((specialty) => ( // specialty オブジェクトの name プロパティを使用
                   <option key={specialty.id} value={specialty.name}>
-                    {specialty}
+                    {specialty.name}
                   </option>
                 ))}
               </select>
