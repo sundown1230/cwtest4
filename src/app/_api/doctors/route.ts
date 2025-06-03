@@ -10,7 +10,6 @@ const mockDoctors: Doctor[] = [
     birthdate: '1980-01-01',
     license_date: '2005-04-01',
     email: 'yamada@example.com',
-    password: 'hashed_password_1',
     specialties: ['内科', '消化器科']
   },
   {
@@ -20,7 +19,6 @@ const mockDoctors: Doctor[] = [
     birthdate: '1985-06-15',
     license_date: '2010-04-01',
     email: 'sato@example.com',
-    password: 'hashed_password_2',
     specialties: ['小児科', 'アレルギー科']
   },
   {
@@ -30,7 +28,6 @@ const mockDoctors: Doctor[] = [
     birthdate: '1975-03-20',
     license_date: '2000-04-01',
     email: 'suzuki@example.com',
-    password: 'hashed_password_3',
     specialties: ['外科', '整形外科']
   },
   {
@@ -40,7 +37,6 @@ const mockDoctors: Doctor[] = [
     birthdate: '1988-12-05',
     license_date: '2013-04-01',
     email: 'tanaka@example.com',
-    password: 'hashed_password_4',
     specialties: ['産婦人科', '婦人科']
   }
 ];
