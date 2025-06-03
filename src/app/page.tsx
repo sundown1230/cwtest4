@@ -81,7 +81,13 @@ export default function Home() {
 
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecialty = !selectedSpecialty || (doctor.specialties ?? []).includes(selectedSpecialty);
+    const matchesSpecialty = !selectedSpecialty || (doctor.specialties ?? []).some(specialtyItem => {
+      if (typeof specialtyItem === 'string') {
+        return specialtyItem === selectedSpecialty;
+      } else {
+        return specialtyItem.name === selectedSpecialty;
+      }
+    });
     return matchesSearch && matchesSpecialty;
   });
 
