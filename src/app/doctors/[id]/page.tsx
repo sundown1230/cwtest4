@@ -38,6 +38,12 @@ export default function DoctorProfile() {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY || ''
       });
+
+      // デバッグログ
+      console.log('API Request:', {
+        url: `${API_BASE_URL}/api/doctors/${params.id}`,
+        headers: Object.fromEntries(headers.entries())
+      });
       
       const response = await fetch(`${API_BASE_URL}/api/doctors/${params.id}`, {
         method: 'GET',
@@ -45,7 +51,8 @@ export default function DoctorProfile() {
       });
 
       if (!response.ok) {
-        throw new Error('医師情報の取得に失敗しました');
+        const errorData = await response.json();
+        throw new Error(errorData.error || '医師情報の取得に失敗しました');
       }
 
       const data = await response.json();
@@ -83,7 +90,7 @@ export default function DoctorProfile() {
       }
     } catch (error) {
       console.error('Failed to fetch doctor profile:', error);
-      setError('医師情報の取得に失敗しました');
+      setError(error instanceof Error ? error.message : '医師情報の取得に失敗しました');
     } finally {
       setIsLoading(false);
     }

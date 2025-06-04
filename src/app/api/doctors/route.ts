@@ -1,29 +1,27 @@
 import { NextResponse } from 'next/server';
-import { ApiResponse, Doctor, Specialty } from '@/types'; // Doctor と Specialty をインポート
-import { D1Database, D1Result } from '@cloudflare/workers-types'; // D1の型をインポート
+import { ApiResponse, Doctor } from '@/types';
+import type { D1Database } from '@cloudflare/workers-types';
 
-interface DoctorQueryResult {
-  id: number;
-  name: string;
-  gender: 'M' | 'F' | 'O' | 'N';
-  birthdate: string;
-  license_date: string;
-  email: string;
-  // specialties は JOIN していないため含まれない
+interface Env {
+  DB: D1Database;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Cloudflare Pages Functions では D1 バインディングはグローバルな env オブジェクトからアクセスします
-    const env = process.env as unknown as { DB?: D1Database }; // 環境変数をより安全に型付け
+    const env = process.env as unknown as Env;
     const DB = env.DB;
+
     if (!DB) {
       console.error('D1 Database binding (DB) not found in GET /api/doctors.');
-      return NextResponse.json<ApiResponse>({ success: false, error: 'サーバー設定エラー', message: 'データベースに接続できませんでした。' }, { status: 500 });
+      return NextResponse.json<ApiResponse>({ 
+        success: false, 
+        error: 'サーバー設定エラー', 
+        message: 'データベースに接続できませんでした。' 
+      }, { status: 500 });
     }
 
-    // 医師情報を取得するクエリ (例: user_type_id=1 で医師に限定し、必要なカラムを取得)
-    // 必要であれば、doctor_specialties と specialties テーブルをJOINして診療科名も取得する
+    // 医師情報を取得するクエリ
     const query = `
       SELECT
         d.id,
@@ -31,55 +29,46 @@ export async function GET() {
         d.email,
         d.gender,
         d.birthdate,
-        d.license_date
-        -- GROUP_CONCAT(s.name) AS specialties -- SQLiteで診療科をカンマ区切り文字列として取得する場合の例
+        d.license_date,
+        GROUP_CONCAT(s.name) AS specialties
       FROM doctors d
-      WHERE d.user_type_id = 1 -- 医師のみを取得
-      -- LEFT JOIN doctor_specialties ds ON d.id = ds.doctor_id
-      -- LEFT JOIN specialties s ON ds.specialty_id = s.id
-      -- GROUP BY d.id
+      LEFT JOIN doctor_specialties ds ON d.id = ds.doctor_id
+      LEFT JOIN specialties s ON ds.specialty_id = s.id
+      WHERE d.user_type_id = 1
+      GROUP BY d.id, d.name, d.email, d.gender, d.birthdate, d.license_date
       ORDER BY d.name
-      LIMIT 100`; // 必要に応じて LIMIT を調整
-    
+      LIMIT 100`;
+
     console.log('[GET /api/doctors] Executing query:', query);
     const stmt = DB.prepare(query);
-    const d1Result: D1Result<DoctorQueryResult> = await stmt.all(); // D1Result型を使用
+    const result = await stmt.all();
 
-    if (d1Result.error) { // D1Result に error プロパティがあるか確認 (通常は例外がスローされる)
-      console.error('D1 query error in GET /api/doctors:', d1Result.error);
+    if (!result.success) {
+      console.error('[GET /api/doctors] D1 query failed:', result.error);
       return NextResponse.json<ApiResponse>({ 
         success: false, 
-        error: 'データベースクエリエラー', 
-        message: '医師情報の取得に失敗しました。',
-        details: d1Result.error 
+        error: 'データベースクエリエラー',
+        message: result.error || '不明なデータベースエラー'
       }, { status: 500 });
     }
 
-    const doctors: Doctor[] = (d1Result.results || []).map(doc => ({
-      ...doc,
-      specialties: [] // 現状では診療科情報を取得していないため空配列
+    // 診療科を配列に変換
+    const doctors = result.results.map(doctor => ({
+      ...doctor,
+      specialties: doctor.specialties ? doctor.specialties.split(',') : []
     }));
 
-    return NextResponse.json<ApiResponse<Doctor[]>>({ success: true, data: doctors });
+    return NextResponse.json<ApiResponse>({ 
+      success: true, 
+      data: doctors 
+    });
 
-  } catch (error: unknown) {
-    console.error('Error fetching doctors list:', error);
-    let errorDetails: any = '不明なエラー';
-    if (error instanceof Error) {
-      errorDetails = {
-        message: error.message,
-        // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
-        cause: ('cause' in error && error.cause instanceof Error) ? error.cause.message : undefined
-      };
-      // 詳細オブジェクトが空または意味がない場合は、エラーメッセージ自体を詳細とする
-      if (Object.values(errorDetails).every(val => val === undefined || val === '')) errorDetails = error.message;
-    }
-
+  } catch (error) {
+    console.error('[GET /api/doctors] Unhandled error:', error);
     return NextResponse.json<ApiResponse>({ 
       success: false, 
-      error: '医師リストの取得に失敗しました', 
-      message: error instanceof Error ? error.message : 'サーバー内部でエラーが発生しました。',
-      details: errorDetails
+      error: '医師情報の取得に失敗しました',
+      message: error instanceof Error ? error.message : '不明なエラー'
     }, { status: 500 });
   }
 }
