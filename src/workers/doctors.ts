@@ -24,21 +24,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
 };
-
-const mockDoctors: Record<string, WorkerDoctor> = { // WorkerDoctor を使用
-  '1': {
-    id: 1,
-    name: '山田太郎',
-    gender: 'M',
-    birthdate: '1980-01-01',
-    license_date: '2005-04-01',
-    email: 'yamada@example.com',
-    specialties: [ // Changed to Specialty[]
-      { id: 1, name: '内科' },
-      { id: 2, name: '消化器科' }
-    ]
-  }
-};
 // src/workers/doctors.ts
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -78,12 +63,7 @@ export default {
           const password_hash = await bcrypt.hash(body.password, saltRounds);
 
           const doctorData: Omit<DoctorDbRecord, 'id'> = { // DoctorDbRecord を使用
-            // TODO: user_type_id を適切に設定するロジックを追加 (例: 登録タイプによる分岐や、常に医師(1)とするか)
-            // 現在は医師(1)を仮定
             user_type_id: 1,
-            // TODO: created_at, updated_at フィールドがあればDBスキーマに合わせて追加
-            // created_at: new Date().toISOString(),
-            // updated_at: new Date().toISOString(),
             name: body.name,
             gender: body.gender,
             birthdate: body.birthdate,
@@ -172,10 +152,19 @@ export default {
           }
 
           const stmt = env.DB.prepare(
-            `SELECT id, name, gender, birthdate, license_date, email FROM doctors ORDER BY name`
+            `SELECT
+               d.id, d.name, d.gender, d.birthdate, d.license_date, d.email,
+               GROUP_CONCAT(s.id) AS specialty_ids,
+               GROUP_CONCAT(s.name) AS specialty_names
+             FROM doctors d
+             LEFT JOIN doctor_specialties ds ON d.id = ds.doctor_id
+             LEFT JOIN specialties s ON ds.specialty_id = s.id
+             GROUP BY d.id, d.name, d.gender, d.birthdate, d.license_date, d.email
+             ORDER BY d.name`
           );
           // D1Result<T> を直接受け取り、successプロパティを確認
-          const d1Result = await stmt.all<Omit<WorkerDoctor, 'specialties'>>();
+          // 型定義を修正: specialty_ids, specialty_names を追加
+          const d1Result = await stmt.all<{ id: number; name: string; gender: 'M' | 'F' | 'O' | 'N'; birthdate: string; license_date: string; email: string; specialty_ids: string | null; specialty_names: string | null }>();
 
           if (!d1Result.success) {
  console.error('[GET /api/doctors] D1 query failed:', d1Result.error);
@@ -184,9 +173,24 @@ export default {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             });
           }
-          
-          const doctorsData: WorkerDoctor[] = d1Result.results 
- ? d1Result.results.map(doc => ({ ...doc, specialties: [] as Specialty[] })) // string[] を Specialty[] に修正
+
+          const doctorsData: WorkerDoctor[] = d1Result.results
+            ? d1Result.results.map(doc => {
+                let mappedSpecialties: Specialty[] = [];
+                if (doc.specialty_ids && doc.specialty_names) {
+                  const ids = doc.specialty_ids.split(',').map(s_id => parseInt(s_id.trim(), 10));
+                  const names = doc.specialty_names.split(',').map(s_name => s_name.trim());
+                  if (ids.length === names.length) {
+                    mappedSpecialties = ids.map((specId, index) => ({
+                      id: specId,
+                      name: names[index],
+                    }));
+                  }
+                }
+                // Omit specialty_ids and specialty_names from the final doctor object
+                const { specialty_ids, specialty_names, ...doctorBaseInfo } = doc;
+                return { ...doctorBaseInfo, specialties: mappedSpecialties };
+              })
             : [];
 
           return new Response(JSON.stringify({ success: true, data: doctorsData }), {
@@ -235,8 +239,13 @@ export default {
           });
         } catch (dbError: unknown) {
           console.error('[GET /api/specialties] Unexpected error during D1 operation:', dbError);
-          // エラーハンドリングは他のエンドポイントと同様に実装することを推奨
-          return new Response(JSON.stringify({ success: false, error: '診療科情報取得中に予期せぬデータベースエラーが発生しました' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+          let errorDetails = '不明なデータベースエラー';
+          if (dbError instanceof Error) {
+             let causeMessage = ('cause' in dbError && dbError.cause instanceof Error) ? ` (Cause: ${dbError.cause.message})` : '';
+             errorDetails = dbError.message + causeMessage;
+          }
+          return new Response(JSON.stringify({ success: false, error: '診療科情報取得中に予期せぬデータベースエラーが発生しました', details: errorDetails }), 
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
         }
       }
 
@@ -309,10 +318,3 @@ export default {
     }
   }
 };
-
-// データベース保存用の型 (password_hash を含む)
-interface WorkerDoctorRecord extends Omit<WorkerDoctor, 'specialties' | 'id'> {
-  user_type_id: number;
-  password_hash: string;
-  // created_at, updated_at など、DBに存在するが WorkerDoctor には含めないフィールドがあればここに追加
-}
