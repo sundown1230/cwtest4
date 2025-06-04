@@ -16,10 +16,8 @@ interface DoctorQueryResult {
   specialties: string | null;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: Request, { env }: { env: Env }) {
   try {
-    // Cloudflare Pages Functions では D1 バインディングはグローバルな env オブジェクトからアクセスします
-    const env = process.env as unknown as Env;
     const DB = env.DB;
 
     if (!DB) {
@@ -63,7 +61,7 @@ export async function GET(request: Request) {
     }
 
     // 診療科を配列に変換
-    const doctors = result.results.map(doctor => ({
+    const doctors = result.results.map((doctor: DoctorQueryResult) => ({
       ...doctor,
       specialties: doctor.specialties ? doctor.specialties.split(',') : []
     }));
