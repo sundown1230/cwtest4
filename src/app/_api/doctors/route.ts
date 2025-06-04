@@ -10,8 +10,11 @@ const mockDoctors: Doctor[] = [
     gender: 'M',
     birthdate: '1980-01-01',
     license_date: '2005-04-01',
-    email: 'yamada@example.com',
-    specialties: ['内科', '消化器科']
+    email: 'yamada@example.com', // specialties を Specialty[] に修正
+    specialties: [
+      { id: 1, name: '内科' }, // 例: 適切なIDを設定
+      { id: 2, name: '消化器科' } // 例: 適切なIDを設定
+    ]
   },
   {
     id: 2,
@@ -20,8 +23,11 @@ const mockDoctors: Doctor[] = [
     gender: 'F',
     birthdate: '1985-06-15',
     license_date: '2010-04-01',
-    email: 'sato@example.com',
-    specialties: ['小児科', 'アレルギー科']
+    email: 'sato@example.com', // specialties を Specialty[] に修正
+    specialties: [
+      { id: 3, name: '小児科' }, // 例: 適切なIDを設定
+      { id: 4, name: 'アレルギー科' } // 例: 適切なIDを設定
+    ]
   },
   {
     id: 3,
@@ -30,8 +36,11 @@ const mockDoctors: Doctor[] = [
     gender: 'M',
     birthdate: '1975-03-20',
     license_date: '2000-04-01',
-    email: 'suzuki@example.com',
-    specialties: ['外科', '整形外科']
+    email: 'suzuki@example.com', // specialties を Specialty[] に修正
+    specialties: [
+      { id: 5, name: '外科' }, // 例: 適切なIDを設定
+      { id: 6, name: '整形外科' } // 例: 適切なIDを設定
+    ]
   },
   {
     id: 4,
@@ -40,8 +49,11 @@ const mockDoctors: Doctor[] = [
     gender: 'F',
     birthdate: '1988-12-05',
     license_date: '2013-04-01',
-    email: 'tanaka@example.com',
-    specialties: ['産婦人科', '婦人科']
+    email: 'tanaka@example.com', // specialties を Specialty[] に修正
+    specialties: [
+      { id: 7, name: '産婦人科' }, // 例: 適切なIDを設定
+      { id: 8, name: '婦人科' } // 例: 適切なIDを設定
+    ]
   }
 ];
 
