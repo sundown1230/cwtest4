@@ -25,9 +25,11 @@ export async function GET() {
     // D1Result<T> 型を使用して、success/error プロパティを確認できるようにする
     const d1Result: D1Result<Specialty> = await stmt.all();
 
-    // D1Result.success はクエリが成功したかどうかを示す (通常は true、エラー時は例外がスローされることが多い)
-    // D1Result.error は詳細なエラーメッセージを含むことがある
-    console.log('[GET /api/specialties] Query executed. Success:', d1Result.success, 'Error (if any):', d1Result.error, 'Results count:', d1Result.results?.length);
+    // D1Result.success はクエリが成功したかどうかを示す (通常は true、エラー時は例外がスローされることが多い) - Pages Functions環境では常にtrueになる傾向
+    // D1Result.error は詳細なエラーメッセージを含むことがある - Pages Functions環境では通常undefined
+    // エラーは通常 try...catch で捕捉される
+    console.log('[GET /api/specialties] Query executed. Success:', d1Result.success, 'Results count:', d1Result.results?.length);
+    if (d1Result.error) console.error('[GET /api/specialties] D1 Result contained error:', d1Result.error); // D1Resultにerrorが含まれる場合のみログ出力
 
     const results = d1Result.results ?? []; // results が undefined の場合は空配列にフォールバック
 
@@ -43,28 +45,25 @@ export async function GET() {
 
   } catch (error: unknown) { // 予期せぬエラーを捕捉、型を unknown に変更
     console.error('[GET /api/specialties] Unexpected error:', error);
-    let generalErrorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
-    let errorDetails: any = '不明なエラー'; 
+    let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
+    let errorDetails: any = error; // デフォルトでエラーオブジェクト全体を詳細に含める
 
     if (error instanceof Error) {
-      generalErrorMessage = error.message; // エラーメッセージを更新
-      let causeMessage = '';
-      // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
-      if ('cause' in error && error.cause instanceof Error) {
-         causeMessage = ` (Cause: ${error.cause.message})`;
-      }
-      // エラーメッセージと原因を詳細として含める
-      const detailsObject = {
+      errorMessage = error.message; // エラーメッセージを更新
+      // 詳細にはメッセージと原因を含める
+      errorDetails = {
         message: error.message,
-        cause: causeMessage.trim() !== '' ? causeMessage.substring(8) : undefined // " (Cause: " を削除
-      };
-      // 詳細オブジェクトが空の場合は、エラーメッセージ自体を詳細とする
-      if (Object.values(detailsObject).every(val => val === undefined || val === '')) {
-        errorDetails = error.message;
-      } else {
-        errorDetails = detailsObject;
+        cause: ('cause' in error && error.cause instanceof Error) ? error.cause.message : undefined
       }
+      // 詳細オブジェクトが空または意味がない場合は、エラーメッセージ自体を詳細とする
+      if (Object.values(errorDetails).every(val => val === undefined || val === '')) errorDetails = error.message;
+
+    } else if (typeof error === 'string') {
+       // エラーが文字列の場合
+       errorDetails = error;
+       errorMessage = `診療科情報の取得中にエラーが発生しました: ${error}`;
     }
+
     return NextResponse.json<ApiResponse>({ 
       success: false, 
       error: '予期せぬエラー', 
