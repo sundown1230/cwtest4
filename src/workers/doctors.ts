@@ -267,8 +267,10 @@ export default {
 
       // 特定医師情報取得 (/api/doctors/:id) - D1データベースから取得
       if (path.startsWith('/api/doctors/') && request.method === 'GET') {
-        const id = path.split('/').pop();
-        if (!id || isNaN(parseInt(id, 10))) {
+        const idSegment = path.split('/').pop();
+        console.log(`[GET /api/doctors/:id] Attempting to fetch doctor with idSegment: '${idSegment}' from path: ${path}`);
+
+        if (!idSegment || isNaN(parseInt(idSegment, 10))) {
           return new Response(JSON.stringify({ success: false, error: '有効な医師IDが指定されていません' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -276,12 +278,13 @@ export default {
         }
 
         if (!env.DB) {
-          console.error(`[GET /api/doctors/${id}] Error: D1 Database binding (DB) is not available.`);
+          console.error(`[GET /api/doctors/${idSegment}] Error: D1 Database binding (DB) is not available.`);
           return new Response(JSON.stringify({ success: false, error: 'サーバー設定エラー: データベース接続が見つかりません。' }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
+        const doctorId = parseInt(idSegment, 10);
 
         // 医師情報と関連する診療科名をJOINして取得
         const stmt = env.DB.prepare(
@@ -294,7 +297,7 @@ export default {
            LEFT JOIN specialties s ON ds.specialty_id = s.id
            WHERE d.id = ?
            GROUP BY d.id`
-        ).bind(parseInt(id, 10));
+        ).bind(doctorId);
 
         try {
           const result = await stmt.first<{ id: number; name: string; gender: 'M' | 'F' | 'O' | 'N'; birthdate: string; license_date: string; email: string; specialty_ids: string | null; specialty_names: string | null }>();
@@ -322,12 +325,12 @@ export default {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         } catch (dbError: unknown) {
-          console.error(`[GET /api/doctors/${id}] D1 query failed:`, dbError);
+          console.error(`[GET /api/doctors/${doctorId}] D1 query failed:`, dbError);
           let errorDetails = '不明なデータベースエラー';
           if (dbError instanceof Error) {
             errorDetails = dbError.message + (('cause' in dbError && dbError.cause instanceof Error) ? ` (Cause: ${dbError.cause.message})` : '');
           }
-          return new Response(JSON.stringify({ success: false, error: 'データベースクエリエラー', details: errorDetails }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }});
+          return new Response(JSON.stringify({ success: false, error: 'データベースクエリエラー', details: errorDetails }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
       }
 
