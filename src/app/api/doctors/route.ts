@@ -28,7 +28,7 @@ export async function GET() {
       -- GROUP BY d.id
       LIMIT 100
     `);
-    const { results, success: querySuccess, error: queryError } = await stmt.all<Doctor>(); // Doctor型全体、または必要なプロパティを持つ型を指定
+    const { results, success: querySuccess, error: queryError } = await stmt.all() as { results: Doctor[] | null, success: boolean, error?: string }; // 型アサーションを使用
 
     if (!querySuccess) {
       console.error('D1 query error in GET /api/doctors:', queryError);
