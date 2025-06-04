@@ -37,7 +37,8 @@ export const GET = async (request: Request, env: Env) => {
   }
 
   try {
-    // console.log(`[GET /api/doctors] Request received.`); // デバッグログは必要に応じて有効化
+    
+    // console.log(`[GET /api/doctors] Request received.`); // デバッグログは本番環境ではコメントアウトまたは削除
     const stmt = env.DB.prepare(
       `SELECT
          d.id, d.name, d.gender, d.birthdate, d.license_date, d.email,
@@ -53,9 +54,8 @@ export const GET = async (request: Request, env: Env) => {
 
     if (!d1Result.success) {
       console.error('[GET /api/doctors] D1 query failed:', d1Result.error);
-      const errorDetails = d1Result.error instanceof Error 
-        ? d1Result.error.message + (('cause' in d1Result.error && d1Result.error.cause instanceof Error) ? ` (Cause: ${d1Result.error.cause.message})` : '')
-        : '不明なデータベースエラー';
+      // d1Result.error is a string, so use it directly.
+      const errorDetails = d1Result.error ? d1Result.error : '不明なデータベースエラー';
 
       return new Response(JSON.stringify({ success: false, error: 'データベースクエリエラー', details: errorDetails }), {
         status: 500,
