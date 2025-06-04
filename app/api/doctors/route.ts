@@ -19,7 +19,7 @@ export const OPTIONS = async () => {
 
 export const GET = async (request: Request, env: Env) => {
   // APIキーの検証
-  const apiKey = request.headers.get('X-API-Key');
+   const apiKey = request.headers.get('X-API-Key');
   if (apiKey !== env.API_KEY) {
     return new Response(JSON.stringify({ success: false, error: '認証エラー' }), {
       status: 401,
