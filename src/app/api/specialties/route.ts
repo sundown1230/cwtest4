@@ -52,14 +52,20 @@ export async function GET() {
 
   } catch (error: unknown) { // 予期せぬエラーを捕捉、型を unknown に変更
     console.error('[GET /api/specialties] Unexpected error:', error);
-    let errorDetails = '不明なエラー';
+    let errorDetails: any = '不明なエラー'; // details は any 型を許容 (ApiResponse 型定義による)
     if (error instanceof Error) {
       let causeMessage = '';
       // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
       if ('cause' in error && error.cause instanceof Error) {
          causeMessage = ` (Cause: ${error.cause.message})`;
       }
-      errorDetails = error.message + causeMessage;
+      // エラーメッセージと原因を詳細として含める
+      errorDetails = { 
+        message: error.message, 
+        cause: causeMessage.trim() !== '' ? causeMessage.substring(8) : undefined // " (Cause: " を削除
+      };
+      // 詳細オブジェクトが空の場合は、エラーメッセージ自体を詳細とする
+      if (Object.keys(errorDetails).every(key => errorDetails[key] === undefined || errorDetails[key] === '')) errorDetails = error.message;
     }
     return NextResponse.json<ApiResponse>({ 
       success: false, 
