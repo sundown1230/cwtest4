@@ -16,7 +16,7 @@ interface WorkerDoctor {
   birthdate: string;
   license_date: string;
   email: string;
-  specialties: Specialty[] | string[]; // types/index.ts の Doctor 型に合わせる
+  specialties: Specialty[]; // Consistently use Specialty[]
 }
 
 const corsHeaders = {
@@ -25,6 +25,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
 };
 
+const mockDoctors: Record<string, WorkerDoctor> = { // WorkerDoctor を使用
+  '1': {
+    id: 1,
+    name: '山田太郎',
+    gender: 'M',
+    birthdate: '1980-01-01',
+    license_date: '2005-04-01',
+    email: 'yamada@example.com',
+    specialties: [ // Changed to Specialty[]
+      { id: 1, name: '内科' },
+      { id: 2, name: '消化器科' }
+    ]
+  }
+};
 // src/workers/doctors.ts
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
