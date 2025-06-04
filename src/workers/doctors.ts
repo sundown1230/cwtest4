@@ -51,6 +51,13 @@ export default {
       // ユーザー登録処理 (/api/register)
       if (path === '/api/register' && request.method === 'POST') {
         try {
+          if (!env.DB) {
+            console.error('[POST /api/register] Error: D1 Database binding (DB) is not available.');
+            return new Response(JSON.stringify({ success: false, error: 'サーバー設定エラー: データベース接続が見つかりません。' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
           const body = await request.json() as RegisterRequest;
 
           if (!body.email || !body.password || !body.name || !body.gender || !body.birthdate || !body.license_date || !body.specialties) {
@@ -64,12 +71,7 @@ export default {
           const password_hash = await bcrypt.hash(body.password, saltRounds);
 
           const doctorData: Omit<DoctorDbRecord, 'id'> = { // DoctorDbRecord を使用
-            // TODO: user_type_id を適切に設定するロジックを追加 (例: 登録タイプによる分岐や、常に医師(1)とするか)
-            // 現在は医師(1)を仮定
             user_type_id: 1,
-            // TODO: created_at, updated_at フィールドがあればDBスキーマに合わせて追加
-            // created_at: new Date().toISOString(),
-            // updated_at: new Date().toISOString(),
             name: body.name,
             gender: body.gender,
             birthdate: body.birthdate,
@@ -83,15 +85,60 @@ export default {
           ).bind(doctorData.user_type_id, doctorData.name, doctorData.gender, doctorData.birthdate, doctorData.license_date, doctorData.email, doctorData.password_hash);
           const { meta } = await insertStmt.run();
           const insertedDoctorId = meta.last_row_id;
-          
-          // TODO: specialties (string[]) を doctor_specialties テーブルに保存する処理
-          // 1. body.specialties (string[] の診療科名) を specialties テーブルの id (number[]) に変換する。
-          //    - 例: SELECT id FROM specialties WHERE name IN (...)
-          //    - 存在しない診療科名が指定された場合のハンドリングも考慮する。
-          // 2. 取得した specialty_id 配列と insertedDoctorId を使って、
-          //    doctor_specialties テーブルに複数のレコードを挿入する。
-          //    - 例: INSERT INTO doctor_specialties (doctor_id, specialty_id) VALUES (?, ?), (?, ?), ...
-          //    - D1のバッチ処理や、ループで個別INSERTを検討。トランザクションも考慮。
+
+          if (insertedDoctorId && body.specialties && body.specialties.length > 0) {
+            // 1. 提供された診療科名からIDを検索
+            const specialtyPlaceholders = body.specialties.map(() => '?').join(',');
+            const specialtyNamesQuery = env.DB.prepare(
+              `SELECT id, name FROM specialties WHERE name IN (${specialtyPlaceholders})`
+            ).bind(...body.specialties);
+            const foundSpecialtiesResult = await specialtyNamesQuery.all<Specialty>();
+
+            if (!foundSpecialtiesResult.success) {
+              console.error('[POST /api/register] Failed to query specialties:', foundSpecialtiesResult.error);
+              // 医師登録は成功したが診療科紐付けに失敗したケース
+              return new Response(JSON.stringify({ success: true, message: 'ユーザー登録は成功しましたが、診療科情報の検証中にエラーが発生し、診療科は未設定です。', doctorId: insertedDoctorId, details: foundSpecialtiesResult.error }), {
+                status: 207, headers: { ...corsHeaders, 'Content-Type': 'application/json' } // Multi-Status
+              });
+            }
+
+            const foundSpecialtiesMap = new Map(foundSpecialtiesResult.results.map(s => [s.name, s.id]));
+            const specialtyIdsToInsert: number[] = [];
+            const missingSpecialties: string[] = [];
+
+            for (const reqSpecialtyName of body.specialties) {
+              const specialtyId = foundSpecialtiesMap.get(reqSpecialtyName);
+              if (specialtyId) {
+                specialtyIdsToInsert.push(specialtyId);
+              } else {
+                missingSpecialties.push(reqSpecialtyName);
+              }
+            }
+
+            if (missingSpecialties.length > 0) {
+              return new Response(JSON.stringify({ success: true, message: `ユーザー登録は成功しましたが、以下の診療科が見つからず、診療科は部分的に未設定です: ${missingSpecialties.join(', ')}`, doctorId: insertedDoctorId }), {
+                status: 207, headers: { ...corsHeaders, 'Content-Type': 'application/json' } // Multi-Status
+              });
+            }
+
+            // 2. doctor_specialties テーブルにバッチ挿入
+            if (specialtyIdsToInsert.length > 0) {
+              const batchStmts = specialtyIdsToInsert.map(specialtyId =>
+                env.DB.prepare("INSERT INTO doctor_specialties (doctor_id, specialty_id) VALUES (?, ?)").bind(insertedDoctorId, specialtyId)
+              );
+              const batchResults = await env.DB.batch(batchStmts);
+              const allSucceeded = batchResults.every(result => result.success);
+
+              if (!allSucceeded) {
+                console.error('[POST /api/register] One or more doctor_specialties insertions failed in batch:', batchResults);
+                // 医師登録は成功したが、診療科の紐付けに一部失敗した場合
+                return new Response(JSON.stringify({ success: true, message: 'ユーザー登録は成功しましたが、一部の診療科の関連付けに失敗しました。', doctorId: insertedDoctorId, details: 'doctor_specialties batch insert failed for some items' }), {
+                  status: 207, // Multi-Status
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+              }
+            }
+          }
 
           return new Response(JSON.stringify({ success: true, message: 'ユーザー登録が成功しました', doctorId: insertedDoctorId }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -123,10 +170,18 @@ export default {
           }
 
           const stmt = env.DB.prepare(
-            `SELECT id, name, gender, birthdate, license_date, email FROM doctors ORDER BY name`
+            `SELECT
+               d.id, d.name, d.gender, d.birthdate, d.license_date, d.email,
+               GROUP_CONCAT(s.id) AS specialty_ids,
+               GROUP_CONCAT(s.name) AS specialty_names
+             FROM doctors d
+             LEFT JOIN doctor_specialties ds ON d.id = ds.doctor_id
+             LEFT JOIN specialties s ON ds.specialty_id = s.id
+             GROUP BY d.id, d.name, d.gender, d.birthdate, d.license_date, d.email
+             ORDER BY d.name`
           );
           // D1Result<T> を直接受け取り、successプロパティを確認
-          const d1Result = await stmt.all<Omit<WorkerDoctor, 'specialties'>>();
+          const d1Result = await stmt.all<{ id: number; name: string; gender: 'M' | 'F' | 'O' | 'N'; birthdate: string; license_date: string; email: string; specialty_ids: string | null; specialty_names: string | null }>();
 
           if (!d1Result.success) {
  console.error('[GET /api/doctors] D1 query failed:', d1Result.error);
@@ -136,8 +191,22 @@ export default {
             });
           }
           
-          const doctorsData: WorkerDoctor[] = d1Result.results 
- ? d1Result.results.map(doc => ({ ...doc, specialties: [] as Specialty[] })) // string[] を Specialty[] に修正
+          const doctorsData: WorkerDoctor[] = d1Result.results
+            ? d1Result.results.map(doc => {
+                let mappedSpecialties: Specialty[] = [];
+                if (doc.specialty_ids && doc.specialty_names) {
+                  const ids = doc.specialty_ids.split(',').map(s_id => parseInt(s_id.trim(), 10));
+                  const names = doc.specialty_names.split(',').map(s_name => s_name.trim());
+                  if (ids.length === names.length) {
+                    mappedSpecialties = ids.map((specId, index) => ({
+                      id: specId,
+                      name: names[index],
+                    }));
+                  }
+                }
+                const { specialty_ids, specialty_names, ...doctorBaseInfo } = doc;
+                return { ...doctorBaseInfo, specialties: mappedSpecialties };
+              })
             : [];
 
           return new Response(JSON.stringify({ success: true, data: doctorsData }), {
@@ -217,7 +286,8 @@ export default {
         // 医師情報と関連する診療科名をJOINして取得
         const stmt = env.DB.prepare(
           `SELECT
-             d.id, d.name, d.gender, d.birthdate, d.license_date, d.email,
+             d.id, d.name, d.gender, d.birthdate, d.license_date, d.email,             
+             GROUP_CONCAT(s.id) AS specialty_ids,
              GROUP_CONCAT(s.name) AS specialty_names
            FROM doctors d
            LEFT JOIN doctor_specialties ds ON d.id = ds.doctor_id
@@ -227,22 +297,23 @@ export default {
         ).bind(parseInt(id, 10));
 
         try {
-          const result = await stmt.first<{ id: number; name: string; gender: 'M' | 'F' | 'O' | 'N'; birthdate: string; license_date: string; email: string; specialty_names: string | null }>();
+          const result = await stmt.first<{ id: number; name: string; gender: 'M' | 'F' | 'O' | 'N'; birthdate: string; license_date: string; email: string; specialty_ids: string | null; specialty_names: string | null }>();
 
           if (result) {
-            // Split comma-separated names and trim whitespace, results in string[]
-            const specialtyNameStrings = result.specialty_names ? result.specialty_names.split(',').map(s => s.trim()) : [];
-            // Map string names to Specialty objects.
-            // For a more complete solution, specialty IDs should also be fetched and mapped.
-            // This current mapping assumes we only have names from GROUP_CONCAT.
-            const mappedSpecialties: Specialty[] = specialtyNameStrings.map((name, index) => ({
-              // Placeholder ID. Ideally, fetch specialty IDs from DB.
-              // If specialty IDs were fetched as `specialty_ids` (e.g., GROUP_CONCAT(s.id)),
-              // you would parse that and use the actual IDs.
-              id: index + 1, // Example placeholder ID logic
-              name: name,
-            }));
-            const doctorData: WorkerDoctor = { ...result, specialties: mappedSpecialties };
+            let mappedSpecialties: Specialty[] = [];
+            if (result.specialty_ids && result.specialty_names) {
+              const ids = result.specialty_ids.split(',').map(s_id => parseInt(s_id.trim(), 10));
+              const names = result.specialty_names.split(',').map(s_name => s_name.trim());
+              if (ids.length === names.length) {
+                mappedSpecialties = ids.map((specId, index) => ({
+                  id: specId,
+                  name: names[index],
+                }));
+              }
+            }
+            // Remove specialty_ids and specialty_names from the final doctor object before spreading
+            const { specialty_ids, specialty_names, ...doctorBaseInfo } = result;
+            const doctorData: WorkerDoctor = { ...doctorBaseInfo, specialties: mappedSpecialties };
             return new Response(JSON.stringify({ success: true, data: doctorData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
 
