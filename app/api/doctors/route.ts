@@ -18,25 +18,26 @@ export const OPTIONS = async () => {
 };
 
 export const GET = async (request: Request, env: Env) => {
+  // APIキーの検証
+  const apiKey = request.headers.get('X-API-Key');
+  if (apiKey !== env.API_KEY) {
+    return new Response(JSON.stringify({ success: false, error: '認証エラー' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // D1データベースバインディングの確認
+  if (!env.DB) {
+    console.error('[GET /api/doctors] Error: D1 Database binding (DB) is not available.');
+    return new Response(JSON.stringify({ success: false, error: 'サーバー設定エラー: データベース接続が見つかりません。' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
-    // APIキーの検証
-    const apiKey = request.headers.get('X-API-Key');
-    if (apiKey !== env.API_KEY) {
-      return new Response(JSON.stringify({ success: false, error: '認証エラー' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    console.log(`[GET /api/doctors] Request received.`);
-    if (!env.DB) {
-      console.error('[GET /api/doctors] Error: D1 Database binding (DB) is not available.');
-      return new Response(JSON.stringify({ success: false, error: 'サーバー設定エラー: データベース接続が見つかりません。' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
+    // console.log(`[GET /api/doctors] Request received.`); // デバッグログは必要に応じて有効化
     const stmt = env.DB.prepare(
       `SELECT
          d.id, d.name, d.gender, d.birthdate, d.license_date, d.email,
@@ -52,10 +53,10 @@ export const GET = async (request: Request, env: Env) => {
 
     if (!d1Result.success) {
       console.error('[GET /api/doctors] D1 query failed:', d1Result.error);
-      let errorDetails = '不明なデータベースエラー';
-      if (d1Result.error instanceof Error) {
-        errorDetails = d1Result.error.message + (('cause' in d1Result.error && d1Result.error.cause instanceof Error) ? ` (Cause: ${d1Result.error.cause.message})` : '');
-      }
+      const errorDetails = d1Result.error instanceof Error 
+        ? d1Result.error.message + (('cause' in d1Result.error && d1Result.error.cause instanceof Error) ? ` (Cause: ${d1Result.error.cause.message})` : '')
+        : '不明なデータベースエラー';
+
       return new Response(JSON.stringify({ success: false, error: 'データベースクエリエラー', details: errorDetails }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -85,12 +86,11 @@ export const GET = async (request: Request, env: Env) => {
     });
   } catch (e: unknown) {
     console.error('[GET /api/doctors] Unhandled error:', e);
-    let errorDetails = '不明なサーバー内部エラー';
-    if (e instanceof Error) {
-      let causeMessage = ('cause' in e && e.cause instanceof Error) ? ` (Cause: ${e.cause.message})` : '';
-      errorDetails = e.message + causeMessage;
-    }
-    return new Response(JSON.stringify({ success: false, error: '医師情報取得中に予期せぬエラーが発生しました', details: errorDetails }), {
+    const errorDetails = e instanceof Error
+        ? e.message + (('cause' in e && e.cause instanceof Error) ? ` (Cause: ${e.cause.message})` : '')
+        : '不明なサーバー内部エラー';
+
+    return new Response(JSON.stringify({ success: false, error: '医師情報取得中に予期せぬサーバー内部エラーが発生しました', details: errorDetails }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
