@@ -12,7 +12,7 @@ interface PagesFunctionContext {
 }
 
 export async function POST(request: Request, context: PagesFunctionContext) {
-  try {
+  try { // 修正: try ブロックの開始位置を修正
     const DB = context.env.DB;
     if (!DB) {
       console.error('D1 Database binding (DB) not found in POST /api/register.');
