@@ -1,19 +1,10 @@
 import { NextResponse } from 'next/server';
 import { ApiResponse, Doctor } from '@/types'; // 適切な型をインポート
-import type { D1Database } from '@cloudflare/workers-types';
 
-// Cloudflare Pages Functions のコンテキストの型を定義
-interface PagesFunctionContext {
-  env: {
-    DB: D1Database; // D1バインディング
-    // 他のバインディングや環境変数があればここに追加
-  };
-  // 他のコンテキストプロパティがあればここに追加
-}
-
-export async function GET(request: Request, context: PagesFunctionContext) {
+export async function GET() {
   try {
-    const DB = context.env.DB;
+    // Cloudflare Pages Functions では D1 バインディングはグローバルな env オブジェクトからアクセスします
+    const DB = (process.env as any).DB;
     if (!DB) {
       console.error('D1 Database binding (DB) not found in GET /api/doctors.');
       return NextResponse.json<ApiResponse>({ success: false, error: 'サーバー設定エラー', message: 'データベースに接続できませんでした。' }, { status: 500 });
