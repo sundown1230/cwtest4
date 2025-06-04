@@ -4,13 +4,17 @@ import { D1Database, D1Result } from '@cloudflare/workers-types'; // D1の型を
 
 export async function GET() {
   try {
-    // Cloudflare Pages Functions では D1 バインディングはグローバルな env オブジェクトからアクセスします
-    // process.env は any として扱う必要がある
-    const DB = (process.env as any).DB as D1Database; // D1Database型に明示的にキャスト
+    // D1バインディングの取得と型ガード
+    const env = process.env as unknown as { DB?: D1Database }; // 環境変数をより安全に型付け
+    const DB = env.DB;
 
     if (!DB) {
       console.error('D1 Database binding (DB) not found in GET /api/specialties.');
-      return NextResponse.json<ApiResponse>({ success: false, error: 'サーバー設定エラー', message: 'データベースに接続できませんでした。' }, { status: 500 });
+      return NextResponse.json<ApiResponse>({ 
+        success: false, 
+        error: 'サーバー設定エラー', 
+        message: 'データベースに接続できませんでした。' 
+      }, { status: 500 });
     }
 
     console.log('[GET /api/specialties] D1 Database binding found. Preparing query...');
@@ -25,7 +29,11 @@ export async function GET() {
 
     if (!d1Result.success) {
         console.error('[GET /api/specialties] D1 query failed:', d1Result.error);
-        return NextResponse.json<ApiResponse>({ success: false, error: 'データベースクエリエラー', details: d1Result.error }, { status: 500 });
+        return NextResponse.json<ApiResponse>({ 
+          success: false, 
+          error: 'データベースクエリエラー', 
+          message: d1Result.error || 'D1クエリ実行中にエラーが発生しました。' // d1Result.error が undefined の場合のフォールバック
+        }, { status: 500 });
     }
 
     const results = d1Result.results;
@@ -40,10 +48,16 @@ export async function GET() {
       }
     });
 
-  } catch (error: any) { // 予期せぬエラーを捕捉
+  } catch (error: unknown) { // 予期せぬエラーを捕捉、型を unknown に変更
     console.error('[GET /api/specialties] Unexpected error:', error);
-    // より詳細なエラー情報をレスポンスに含める
-    const errorDetails = error.message + (error.cause ? ` (Cause: ${(error.cause as Error).message})` : '');
-    return NextResponse.json<ApiResponse>({ success: false, error: '診療科情報の取得中に予期せぬエラーが発生しました', details: errorDetails }, { status: 500 });
+    let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
+    if (error instanceof Error) {
+      errorMessage = error.message + (error.cause ? ` (Cause: ${(error.cause as Error).message})` : '');
+    }
+    return NextResponse.json<ApiResponse>({ 
+      success: false, 
+      error: '予期せぬエラー', 
+      message: errorMessage 
+    }, { status: 500 });
   }
 }
