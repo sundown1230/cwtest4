@@ -12,7 +12,7 @@ interface PagesFunctionContext {
 }
 
 export async function POST(request: Request, context: PagesFunctionContext) {
-  try { // 修正: try ブロックの開始位置を修正
+  try {
     const DB = context.env.DB;
     if (!DB) {
       console.error('D1 Database binding (DB) not found in POST /api/register.');
@@ -20,7 +20,7 @@ export async function POST(request: Request, context: PagesFunctionContext) {
     }
 
     const body = await request.json<RegisterRequest>();
- // 修正: request.json() に型引数を指定しない
+    // 修正: request.json() に型引数を指定しない
     if (!body.email || !body.password || !body.name || !body.gender || !body.birthdate || !body.license_date || !body.specialties) {
       return NextResponse.json<ApiResponse>({ success: false, error: '必須項目が不足しています' }, { status: 400 });
     }
