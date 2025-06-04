@@ -1,7 +1,7 @@
 // src/workers/doctors.ts
 import { ExecutionContext, D1Database } from '@cloudflare/workers-types'; // Import D1Database
 import bcrypt from 'bcryptjs';
-import { RegisterRequest, ApiResponse, Specialty } from '@/types'; // Assuming RegisterRequest, ApiResponse, and Specialty are defined in @/types
+import { RegisterRequest, ApiResponse, Specialty, DoctorDbRecord, Doctor } from '@/types'; // 型定義をインポート
 
 interface Env {
   JWT_SECRET: string;
@@ -16,9 +16,10 @@ interface WorkerDoctor {
   birthdate: string;
   license_date: string;
   email: string;
-  specialties: string[];
+  specialties: Specialty[] | string[]; // types/index.ts の Doctor 型に合わせる
 }
 
+    try {
       // ユーザー登録処理 (/api/register)
       if (path === '/api/register' && request.method === 'POST') {
         try {
@@ -35,7 +36,7 @@ interface WorkerDoctor {
           const password_hash = await bcrypt.hash(body.password, saltRounds);
 
           const doctorData: Omit<WorkerDoctorRecord, 'id'> = {
-            // TODO: user_type_id を適切に設定するロジックを追加 (例: 登録タイプによる分岐)
+            // TODO: user_type_id を適切に設定するロジックを追加 (例: 登録タイプによる分岐や、常に医師(1)とするか)
             // 現在は医師(1)を仮定
             user_type_id: 1,
             // TODO: created_at, updated_at フィールドがあればDBスキーマに合わせて追加
@@ -229,8 +230,8 @@ export default {
           const saltRounds = 10;
           const password_hash = await bcrypt.hash(body.password, saltRounds);
 
-          const doctorData: Omit<WorkerDoctorRecord, 'id'> = {
-            // TODO: user_type_id を適切に設定するロジックを追加 (例: 登録タイプによる分岐)
+          const doctorData: Omit<DoctorDbRecord, 'id'> = { // DoctorDbRecord を使用
+            // TODO: user_type_id を適切に設定するロジックを追加 (例: 登録タイプによる分岐や、常に医師(1)とするか)
             // 現在は医師(1)を仮定
             user_type_id: 1,
             // TODO: created_at, updated_at フィールドがあればDBスキーマに合わせて追加
@@ -263,9 +264,13 @@ export default {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
 
-        } catch (e: any) {
+        } catch (e: unknown) { // 型を unknown に変更
           console.error('登録エラー:', e);
-          const errorDetails = e.message + (e.cause ? ` (Cause: ${(e.cause as Error).message})` : '');
+          let errorDetails = '不明なエラー';
+          if (e instanceof Error) {
+             let causeMessage = ('cause' in e && e.cause instanceof Error) ? ` (Cause: ${e.cause.message})` : '';
+             errorDetails = e.message + causeMessage;
+          }
           return new Response(JSON.stringify({ success: false, error: '登録処理中にエラーが発生しました', details: errorDetails }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -314,9 +319,13 @@ export default {
           return new Response(JSON.stringify({ success: true, data: doctorsData }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
-        } catch (dbError: any) {
+        } catch (dbError: unknown) { // 型を unknown に変更
           console.error('[GET /api/doctors] Unexpected error during D1 operation:', dbError);
-          const errorDetails = dbError.message + (dbError.cause ? ` (Cause: ${(dbError.cause as Error).message})` : '');
+          let errorDetails = '不明なデータベースエラー';
+          if (dbError instanceof Error) {
+             let causeMessage = ('cause' in dbError && dbError.cause instanceof Error) ? ` (Cause: ${dbError.cause.message})` : '';
+             errorDetails = dbError.message + causeMessage;
+          }
           return new Response(JSON.stringify({ success: false, error: '医師情報取得中に予期せぬデータベースエラーが発生しました', details: errorDetails }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -365,9 +374,13 @@ export default {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
 
-    } catch (e: any) { // Top-level catch for any unhandled errors
+    } catch (e: unknown) { // Top-level catch for any unhandled errors, 型を unknown に変更
       console.error('Unhandled error in fetch handler:', e);
-      const errorDetails = e.message + (e.cause ? ` (Cause: ${(e.cause as Error).message})` : '');
+      let errorDetails = '不明なサーバー内部エラー';
+      if (e instanceof Error) {
+         let causeMessage = ('cause' in e && e.cause instanceof Error) ? ` (Cause: ${e.cause.message})` : '';
+         errorDetails = e.message + causeMessage;
+      }
       return new Response(JSON.stringify({ success: false, error: 'サーバー内部エラーが発生しました', details: errorDetails }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
