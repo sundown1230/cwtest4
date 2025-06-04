@@ -36,8 +36,12 @@ export default function Home() {
       const data = await response.json();
       console.log('API Response:', data); // デバッグログを追加
 
-      if (data.success && data.data) {
+      if (Array.isArray(data)) {
+        setDoctors(data);
+        setError('');
+      } else if (data.success && data.data) {
         setDoctors(data.data);
+        setError('');
       } else {
         throw new Error(data.error || '医師情報の取得に失敗しました');
       }
