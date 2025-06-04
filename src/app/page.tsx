@@ -34,6 +34,8 @@ export default function Home() {
       }
       
       const data = await response.json();
+      console.log('API Response:', data); // デバッグログを追加
+
       if (data.success && data.data) {
         setDoctors(data.data);
       } else {
@@ -49,45 +51,22 @@ export default function Home() {
 
   const fetchSpecialties = async () => {
     try {
-      const response = await fetch('/api/specialties', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-        },
-        cache: 'no-store',
-      });
-      
-      if (!response.ok) {
-        throw new Error('診療科情報の取得に失敗しました');
+      const response = await fetch('/api/specialties');
+      const data = await response.json();
+      if (data.success && data.data) {
+        setSpecialties(data.data);
       }
-      
-      // APIは診療科の配列を直接返すため、そのように処理する
-      const data: Specialty[] = await response.json(); // 型を Specialty[] に変更
-      if (Array.isArray(data)) {
-        setSpecialties(data);
-      } else {
-        // APIがエラーオブジェクトを返す場合（例: { error: "..." }）も考慮
-        // このAPI (src/app/api/specialties/route.ts) の場合、エラー時は { error: "...", message: "..." } を返す
-        const errorData = data as any; // 一時的にany型としてアクセス
-        throw new Error(errorData.error || errorData.message || '診療科情報の形式が正しくありません');
-      }
-
     } catch (error) {
       console.error('Failed to fetch specialties:', error);
-      setError('診療科情報の取得に失敗しました');
     }
   };
 
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecialty = !selectedSpecialty || (doctor.specialties ?? []).some(specialtyItem => {
-      if (typeof specialtyItem === 'string') {
-        return specialtyItem === selectedSpecialty;
-      } else {
-        return specialtyItem.name === selectedSpecialty;
-      }
-    });
+    const matchesSpecialty = !selectedSpecialty || 
+      (doctor.specialties && doctor.specialties.some(s => 
+        typeof s === 'string' ? s === selectedSpecialty : s.name === selectedSpecialty
+      ));
     return matchesSearch && matchesSpecialty;
   });
 
@@ -182,7 +161,7 @@ export default function Home() {
                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">全ての診療科</option>
-                {specialties.map((specialty) => ( // specialty オブジェクトの name プロパティを使用
+                {specialties.map((specialty) => (
                   <option key={specialty.id} value={specialty.name}>
                     {specialty.name}
                   </option>
@@ -239,19 +218,15 @@ export default function Home() {
                     <p className="text-sm text-gray-600">
                       医師免許取得日: {new Date(doctor.license_date).toLocaleDateString('ja-JP')}
                     </p>
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {(doctor.specialties ?? []).map((specialtyItem) => {
-                            const key = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.id;
-                            const displayName = typeof specialtyItem === 'string' ? specialtyItem : specialtyItem.name;
-                            return (
-                              <span
-                                key={key}
-                                className="px-2 py-1 bg-blue-50 text-blue-600 rounded-full text-xs"
-                              >
-                                {displayName}
-                              </span>
-                            );
-                          })}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {doctor.specialties && doctor.specialties.map((specialty, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                            >
+                              {typeof specialty === 'string' ? specialty : specialty.name}
+                            </span>
+                          ))}
                         </div>
                   </div>
                     </Link>
