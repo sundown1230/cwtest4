@@ -3,16 +3,10 @@ import { ApiResponse, Doctor } from '@/types';
 import type { D1Database } from '@cloudflare/workers-types';
 
 // Cloudflare Pages Functions のコンテキストの型を定義
-interface PagesFunctionContext {
-  env: {
-    DB: D1Database; // D1バインディング
-    // 他のバインディングや環境変数があればここに追加
-  };
-  params: { // Next.js App Router の動的セグメント
-    id: string;
-  };
-}
-
+// Next.js App Router では、動的セグメントは関数の第二引数の params プロパティから取得します
+// interface PagesFunctionContext {
+//   params: { id: string };
+// }
 // WorkerにあったモックデータをPages Functionに移す (D1から取得するロジックに置き換える必要があります)
 const mockDoctors: Record<string, Omit<Doctor, 'password_hash' | 'created_at' | 'updated_at'>> = {
   '1': {
@@ -27,9 +21,12 @@ const mockDoctors: Record<string, Omit<Doctor, 'password_hash' | 'created_at' | 
   }
 };
 
-export async function GET(request: Request, context: PagesFunctionContext) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const doctorId = context.params.id;
+    // Cloudflare Pages Functions では D1 バインディングはグローバルな env オブジェクトからアクセスします
+    // const DB = (process.env as any).DB as D1Database;
+    // if (!DB) { ... } // D1を使用する場合はこのチェックを追加
+    const doctorId = params.id;
 
     // TODO: D1データベースから実際に医師情報を取得するロジックに置き換える
     const doctor = mockDoctors[doctorId]; // 現在はモックデータを使用

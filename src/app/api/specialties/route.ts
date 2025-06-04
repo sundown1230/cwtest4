@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     const stmt = DB.prepare('SELECT id, name FROM specialties ORDER BY id');
-    const { results } = await stmt.all<Specialty>();
+    const { results } = await stmt.all() as { results: Specialty[] | null };
 
     // フロントエンドは Specialty[] を直接期待しているため、ApiResponse でラップせずに返す
     return NextResponse.json(results ?? [], {

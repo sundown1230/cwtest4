@@ -3,16 +3,16 @@ import bcrypt from 'bcryptjs';
 import { RegisterRequest, ApiResponse } from '@/types';
 import type { D1Database } from '@cloudflare/workers-types';
 
-export async function POST(request: Request, context: PagesFunctionContext) {
+export async function POST(request: Request) {
   try {
-    const DB = context.env.DB;
+    // Cloudflare Pages Functions では D1 バインディングはグローバルな env オブジェクトからアクセスします
+    const DB = (process.env as any).DB as D1Database;
     if (!DB) {
       console.error('D1 Database binding (DB) not found in POST /api/register.');
       return NextResponse.json<ApiResponse>({ success: false, error: 'サーバー設定エラー', message: 'データベースに接続できませんでした。' }, { status: 500 });
     }
 
-    const body = await request.json<RegisterRequest>();
-    // 修正: request.json() に型引数を指定しない
+    const body = await request.json() as RegisterRequest;
     if (!body.email || !body.password || !body.name || !body.gender || !body.birthdate || !body.license_date || !body.specialties) {
       return NextResponse.json<ApiResponse>({ success: false, error: '必須項目が不足しています' }, { status: 400 });
     }
