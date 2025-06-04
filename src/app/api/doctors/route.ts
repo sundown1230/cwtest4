@@ -6,6 +6,16 @@ interface Env {
   DB: D1Database;
 }
 
+interface DoctorQueryResult {
+  id: number;
+  name: string;
+  email: string;
+  gender: string;
+  birthdate: string;
+  license_date: string;
+  specialties: string | null;
+}
+
 export async function GET(request: Request) {
   try {
     // Cloudflare Pages Functions では D1 バインディングはグローバルな env オブジェクトからアクセスします
@@ -41,7 +51,7 @@ export async function GET(request: Request) {
 
     console.log('[GET /api/doctors] Executing query:', query);
     const stmt = DB.prepare(query);
-    const result = await stmt.all();
+    const result = await stmt.all<DoctorQueryResult>();
 
     if (!result.success) {
       console.error('[GET /api/doctors] D1 query failed:', result.error);
