@@ -52,19 +52,20 @@ export async function GET() {
 
   } catch (error: unknown) { // 予期せぬエラーを捕捉、型を unknown に変更
     console.error('[GET /api/specialties] Unexpected error:', error);
-    let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
+    let errorDetails = '不明なエラー';
     if (error instanceof Error) {
       let causeMessage = '';
       // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
       if ('cause' in error && error.cause instanceof Error) {
          causeMessage = ` (Cause: ${error.cause.message})`;
       }
-      errorMessage = error.message + causeMessage;
+      errorDetails = error.message + causeMessage;
     }
     return NextResponse.json<ApiResponse>({ 
       success: false, 
       error: '予期せぬエラー', 
-      details: errorMessage // 予期せぬエラーの詳細を details に設定
+      message: '診療科情報の取得中に予期せぬエラーが発生しました', // 一般的なエラーメッセージ
+      details: errorDetails // 詳細なエラー情報を details に設定
     }, { status: 500 });
   }
 }
