@@ -1,7 +1,7 @@
 // src/workers/doctors.ts
 import { ExecutionContext, D1Database } from '@cloudflare/workers-types'; // Import D1Database
 import bcrypt from 'bcryptjs';
-import { RegisterRequest } from '@/types'; // Assuming RegisterRequest is defined in @/types
+import { RegisterRequest, ApiResponse, Specialty } from '@/types'; // Assuming RegisterRequest, ApiResponse, and Specialty are defined in @/types
 
 interface Env {
   JWT_SECRET: string;
@@ -18,23 +18,6 @@ interface WorkerDoctor {
   email: string;
   specialties: string[];
 }
-
-interface WorkerDoctorRecord extends Omit<WorkerDoctor, 'specialties' | 'id'> {
-  user_type_id: number;
-  password_hash: string;
-}
-
-const mockDoctors: Record<string, WorkerDoctor> = { // Used for /api/doctors/:id
-  '1': {
-    id: 1,
-    name: '山田太郎',
-    gender: 'M',
-    birthdate: '1980-01-01',
-    license_date: '2005-04-01',
-    email: 'yamada@example.com',
-    specialties: ['内科', '消化器科']
-  }
-};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +40,7 @@ export default {
       // ユーザー登録処理 (/api/register)
       if (path === '/api/register' && request.method === 'POST') {
         try {
-          const body = await request.json<RegisterRequest>();
+          const body = await request.json() as RegisterRequest;
 
           if (!body.email || !body.password || !body.name || !body.gender || !body.birthdate || !body.license_date || !body.specialties) {
             return new Response(JSON.stringify({ success: false, error: '必須項目が不足しています' }), {
@@ -70,7 +53,12 @@ export default {
           const password_hash = await bcrypt.hash(body.password, saltRounds);
 
           const doctorData: Omit<WorkerDoctorRecord, 'id'> = {
-            user_type_id: 1, // Default to doctor
+            // TODO: user_type_id を適切に設定するロジックを追加 (例: 登録タイプによる分岐)
+            // 現在は医師(1)を仮定
+            user_type_id: 1,
+            // TODO: created_at, updated_at フィールドがあればDBスキーマに合わせて追加
+            // created_at: new Date().toISOString(),
+            // updated_at: new Date().toISOString(),
             name: body.name,
             gender: body.gender,
             birthdate: body.birthdate,
@@ -85,7 +73,14 @@ export default {
           const { meta } = await insertStmt.run();
           const insertedDoctorId = meta.last_row_id;
           
-          // TODO: Save specialties to doctor_specialties table using insertedDoctorId and body.specialties
+          // TODO: specialties (string[]) を doctor_specialties テーブルに保存する処理
+          // 1. body.specialties (string[] の診療科名) を specialties テーブルの id (number[]) に変換する。
+          //    - 例: SELECT id FROM specialties WHERE name IN (...)
+          //    - 存在しない診療科名が指定された場合のハンドリングも考慮する。
+          // 2. 取得した specialty_id 配列と insertedDoctorId を使って、
+          //    doctor_specialties テーブルに複数のレコードを挿入する。
+          //    - 例: INSERT INTO doctor_specialties (doctor_id, specialty_id) VALUES (?, ?), (?, ?), ...
+          //    - D1のバッチ処理や、ループで個別INSERTを検討。トランザクションも考慮。
 
           return new Response(JSON.stringify({ success: true, message: 'ユーザー登録が成功しました', doctorId: insertedDoctorId }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -113,6 +108,8 @@ export default {
       // 全医師情報取得 (/api/doctors)
       if (path === '/api/doctors' && request.method === 'GET') {
         const stmt = env.DB.prepare(
+          // 全医師の基本情報を取得。診療科を全てJOINするとパフォーマンスに影響する可能性があるため、
+          // ここでは基本情報のみとし、個別の医師情報取得時に診療科を取得する。
           `SELECT id, name, gender, birthdate, license_date, email FROM doctors ORDER BY name`
         );
         const { results } = await stmt.all<Omit<WorkerDoctor, 'specialties'>>();
@@ -126,14 +123,35 @@ export default {
         });
       }
 
-      // 特定医師情報取得 (/api/doctors/:id) - mockDoctorsを使用
+      // 特定医師情報取得 (/api/doctors/:id) - D1データベースから取得
       if (path.startsWith('/api/doctors/') && request.method === 'GET') {
         const id = path.split('/').pop();
-        if (id && mockDoctors[id]) {
-          return new Response(JSON.stringify({ success: true, data: mockDoctors[id] }), {
+        if (!id || isNaN(parseInt(id, 10))) {
+           return new Response(JSON.stringify({ success: false, error: '有効な医師IDが指定されていません' }), {
+            status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
+
+        // 医師情報と関連する診療科名をJOINして取得
+        const stmt = env.DB.prepare(
+          `SELECT
+             d.id, d.name, d.gender, d.birthdate, d.license_date, d.email,
+             GROUP_CONCAT(s.name) AS specialty_names
+           FROM doctors d
+           LEFT JOIN doctor_specialties ds ON d.id = ds.doctor_id
+           LEFT JOIN specialties s ON ds.specialty_id = s.id
+           WHERE d.id = ?
+           GROUP BY d.id`
+        ).bind(parseInt(id, 10));
+
+        const result = await stmt.first<{ id: number; name: string; gender: 'M' | 'F' | 'O' | 'N'; birthdate: string; license_date: string; email: string; specialty_names: string | null }>();
+
+        if (result) {
+          const doctorData: WorkerDoctor = { ...result, specialties: result.specialty_names ? result.specialty_names.split(',') : [] };
+          return new Response(JSON.stringify({ success: true, data: doctorData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
         return new Response(JSON.stringify({ success: false, error: '医師情報が見つかりませんでした' }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -156,3 +174,10 @@ export default {
     }
   }
 };
+
+// データベース保存用の型 (password_hash を含む)
+interface WorkerDoctorRecord extends Omit<WorkerDoctor, 'specialties' | 'id'> {
+  user_type_id: number;
+  password_hash: string;
+  // created_at, updated_at など、DBに存在するが WorkerDoctor には含めないフィールドがあればここに追加
+}
