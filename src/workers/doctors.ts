@@ -27,20 +27,19 @@ export default {
     // TODO: Pages Functions に移行したAPIロジックを削除しました。
     // このWorkerが他の目的で必要ない場合は、ファイル自体を削除するか、
     // Pages Functions で処理できない特定のロジックのみをここに残してください。
+    // This worker's API logic has been migrated. Returning a deprecated message.
     return new Response(
       JSON.stringify({
-        success: true,
-        data: mockDoctors[id]
+        success: false,
+        error: 'This Worker endpoint is deprecated. Functionality has been moved to Pages Functions.'
       }),
       {
+        status: 410, // HTTP 410 Gone
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
+          ...corsHeaders // Apply all defined CORS headers
         }
       }
     );
-
-    // 例: もしWorkerでしかできない特定の処理があればここに記述
-    // if (path.startsWith('/worker-only-api')) { ... }
   }
 };
