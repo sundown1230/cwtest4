@@ -45,9 +45,10 @@ export const GET = async (request: Request, env: Env) => {
     if (!d1Result.success) {
       console.error('[GET /api/specialties] D1 query failed:', d1Result.error);
       let errorDetails = '不明なデータベースエラー';
-      if (d1Result.error instanceof Error) {
-        errorDetails = d1Result.error.message + (('cause' in d1Result.error && d1Result.error.cause instanceof Error) ? ` (Cause: ${d1Result.error.cause.message})` : '');
-      }
+      // d1Result.error is a string or undefined, not an Error object.
+      // Use the string directly if it exists.
+      errorDetails = d1Result.error ? d1Result.error : '不明なデータベースエラー';
+
       return new Response(JSON.stringify({ success: false, error: 'データベースクエリエラー', details: errorDetails }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

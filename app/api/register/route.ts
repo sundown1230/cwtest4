@@ -29,7 +29,8 @@ export const POST = async (request: Request, env: Env) => {
       });
     }
 
-    console.log(`[${request.method} ${request.url}] Request received.`);
+    // Log only the path to avoid exposing sensitive query parameters if any
+    console.log(`[${request.method} ${new URL(request.url).pathname}] Request received.`);
     if (!env.DB) {
       console.error('[POST /api/register] Error: D1 Database binding (DB) is not available.');
       return new Response(JSON.stringify({ success: false, error: 'サーバー設定エラー: データベース接続が見つかりません。' }), {
