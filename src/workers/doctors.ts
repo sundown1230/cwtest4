@@ -107,20 +107,44 @@ export default {
 
       // 全医師情報取得 (/api/doctors)
       if (path === '/api/doctors' && request.method === 'GET') {
-        const stmt = env.DB.prepare(
-          // 全医師の基本情報を取得。診療科を全てJOINするとパフォーマンスに影響する可能性があるため、
-          // ここでは基本情報のみとし、個別の医師情報取得時に診療科を取得する。
-          `SELECT id, name, gender, birthdate, license_date, email FROM doctors ORDER BY name`
-        );
-        const { results } = await stmt.all<Omit<WorkerDoctor, 'specialties'>>();
-        
-        const doctorsData: WorkerDoctor[] = results 
-          ? results.map(doc => ({ ...doc, specialties: [] as string[] })) // Add empty specialties for now
-          : [];
+        try {
+          if (!env.DB) {
+            console.error('[GET /api/doctors] Error: D1 Database binding (DB) is not available.');
+            return new Response(JSON.stringify({ success: false, error: 'サーバー設定エラー: データベース接続が見つかりません。' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
 
-        return new Response(JSON.stringify({ success: true, data: doctorsData }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+          const stmt = env.DB.prepare(
+            `SELECT id, name, gender, birthdate, license_date, email FROM doctors ORDER BY name`
+          );
+          // D1Result<T> を直接受け取り、successプロパティを確認
+          const d1Result = await stmt.all<Omit<WorkerDoctor, 'specialties'>>();
+
+          if (!d1Result.success) {
+            console.error('[GET /api/doctors] D1 query failed:', d1Result.error);
+            return new Response(JSON.stringify({ success: false, error: 'データベースクエリエラー', details: d1Result.error }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          
+          const doctorsData: WorkerDoctor[] = d1Result.results 
+            ? d1Result.results.map(doc => ({ ...doc, specialties: [] as string[] })) 
+            : [];
+
+          return new Response(JSON.stringify({ success: true, data: doctorsData }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } catch (dbError: any) {
+          console.error('[GET /api/doctors] Unexpected error during D1 operation:', dbError);
+          const errorDetails = dbError.message + (dbError.cause ? ` (Cause: ${(dbError.cause as Error).message})` : '');
+          return new Response(JSON.stringify({ success: false, error: '医師情報取得中に予期せぬデータベースエラーが発生しました', details: errorDetails }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
       }
 
       // 特定医師情報取得 (/api/doctors/:id) - D1データベースから取得
