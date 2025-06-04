@@ -32,7 +32,7 @@ export async function GET() {
         return NextResponse.json<ApiResponse>({ 
           success: false, 
           error: 'データベースクエリエラー', 
-          message: d1Result.error || 'D1クエリ実行中にエラーが発生しました。' // d1Result.error が undefined の場合のフォールバック
+          message: (d1Result.error && d1Result.error.trim() !== '') ? d1Result.error : 'D1クエリ実行中にエラーが発生しました。'
         }, { status: 500 });
     }
 
@@ -52,7 +52,12 @@ export async function GET() {
     console.error('[GET /api/specialties] Unexpected error:', error);
     let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
     if (error instanceof Error) {
-      errorMessage = error.message + (error.cause ? ` (Cause: ${(error.cause as Error).message})` : '');
+      let causeMessage = '';
+      // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
+      if ('cause' in error && error.cause instanceof Error) {
+         causeMessage = ` (Cause: ${error.cause.message})`;
+      }
+      errorMessage = error.message + causeMessage;
     }
     return NextResponse.json<ApiResponse>({ 
       success: false, 
