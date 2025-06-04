@@ -76,6 +76,6 @@ export interface DoctorDbRecord {
   license_date: string; // ISO 8601 date string (YYYY-MM-DD)
   email: string;
   password_hash: string; // 認証に使用するパスワードハッシュ
-  created_at: string; // ISO 8601 datetime string
-  updated_at: string; // ISO 8601 datetime string
+  created_at?: string; // ISO 8601 datetime string (DB側で自動生成される場合はオプショナル)
+  updated_at?: string; // ISO 8601 datetime string (DB側で自動生成される場合はオプショナル)
 }
