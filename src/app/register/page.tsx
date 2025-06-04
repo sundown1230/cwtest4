@@ -37,10 +37,14 @@ export default function Register() {
       console.log('Data from /api/specialties after json():', data);
       if (Array.isArray(data)) {
         setSpecialties(data);
+        console.log('Specialties state updated:', data); // ステート更新後の内容を確認
       } else {
-        // APIがエラーオブジェクトを返す場合（例: { error: "..." }）も考慮
+        // APIが予期せず配列でないデータを返した場合の処理
         const errorData = data as any; // 一時的にany型としてアクセス
-        throw new Error(errorData.error || errorData.message || '診療科情報の形式が正しくありません');
+        const errorMessage = errorData.error || errorData.message || '診療科情報の形式が正しくありません';
+        console.error('Invalid data format for specialties:', errorData); // 詳細なエラー情報をログに出力
+        setError(errorMessage); // 画面にエラーメッセージを設定
+        setSpecialties([]); // 診療科リストを空にすることを明示
       }
 
     } catch (error) {
@@ -170,7 +174,7 @@ export default function Register() {
               <option value="">選択してください</option>
               {specialties.map((specialty) => ( // specialty オブジェクトの name プロパティを使用
                 <option key={specialty.id} value={specialty.name}>
-                  {specialty.name} 
+                  {specialty.name}
                 </option>
               ))}
             </select>
