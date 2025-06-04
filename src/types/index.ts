@@ -80,3 +80,14 @@ export interface DoctorDbRecord {
   updated_at?: string; // ISO 8601 datetime string (DB側で自動生成される場合はオプショナル)
   // specialties は doctor_specialties テーブルで別途管理されるため、この型には直接含めない
 }
+
+// APIレスポンスやフロントエンドで診療科情報を含めて医師情報を扱うための型
+export interface WorkerDoctor {
+  id: number;
+  name: string;
+  gender: 'M' | 'F' | 'O' | 'N';
+  birthdate: string;
+  license_date: string;
+  email: string;
+  specialties: Specialty[]; // 医師が持つ診療科のリスト
+}
