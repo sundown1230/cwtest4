@@ -39,7 +39,9 @@ export default {
     try {
       // APIキーの検証 (登録処理を含むすべての保護ルートに適用)
       // /api/register も保護対象とするため、この位置に移動
-      if (path.startsWith('/api/') && path !== '/api/public-route') { // 例: '/api/public-route' のような公開APIがあれば除外
+      // ただし、認証が不要な公開APIパスは除外する (例: '/api/public-route')
+      const isProtectedRoute = path.startsWith('/api/') && path !== '/api/public-route';
+      if (isProtectedRoute) {
         const apiKey = request.headers.get('X-API-Key');
         if (apiKey !== env.API_KEY) {
           return new Response(JSON.stringify({ success: false, error: '認証エラー' }), {
@@ -145,7 +147,7 @@ export default {
           });
 
         } catch (e: unknown) { // 型を unknown に変更
-          console.error('登録エラー:', e);
+          console.error('[POST /api/register] Registration error:', e);
           let errorDetails = '不明なエラー';
           if (e instanceof Error) {
              let causeMessage = ('cause' in e && e.cause instanceof Error) ? ` (Cause: ${e.cause.message})` : '';
@@ -161,6 +163,7 @@ export default {
       // 全医師情報取得 (/api/doctors)
       if (path === '/api/doctors' && request.method === 'GET') {
         try {
+          // console.log(`[GET /api/doctors] Attempting to fetch all doctors from path: ${path}`); // デバッグログは必要に応じて有効化
           if (!env.DB) {
             console.error('[GET /api/doctors] Error: D1 Database binding (DB) is not available.');
             return new Response(JSON.stringify({ success: false, error: 'サーバー設定エラー: データベース接続が見つかりません。' }), {
@@ -268,7 +271,7 @@ export default {
       // 特定医師情報取得 (/api/doctors/:id) - D1データベースから取得
       if (path.startsWith('/api/doctors/') && request.method === 'GET') {
         const idSegment = path.split('/').pop();
-        console.log(`[GET /api/doctors/:id] Attempting to fetch doctor with idSegment: '${idSegment}' from path: ${path}`);
+        // console.log(`[GET /api/doctors/:id] Attempting to fetch doctor with idSegment: '${idSegment}' from path: ${path}`); // デバッグログは必要に応じて有効化
 
         if (!idSegment || isNaN(parseInt(idSegment, 10))) {
           return new Response(JSON.stringify({ success: false, error: '有効な医師IDが指定されていません' }), {
