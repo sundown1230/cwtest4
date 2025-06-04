@@ -141,7 +141,7 @@ export default {
           const d1Result = await stmt.all<Omit<WorkerDoctor, 'specialties'>>();
 
           if (!d1Result.success) {
-            console.error('[GET /api/doctors] D1 query failed:', d1Result.error);
+ console.error('[GET /api/doctors] D1 query failed:', d1Result.error);
             return new Response(JSON.stringify({ success: false, error: 'データベースクエリエラー', details: d1Result.error }), {
               status: 500,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -149,7 +149,7 @@ export default {
           }
           
           const doctorsData: WorkerDoctor[] = d1Result.results 
-            ? d1Result.results.map(doc => ({ ...doc, specialties: [] as string[] })) 
+ ? d1Result.results.map(doc => ({ ...doc, specialties: [] as Specialty[] })) // string[] を Specialty[] に修正
             : [];
 
           return new Response(JSON.stringify({ success: true, data: doctorsData }), {
