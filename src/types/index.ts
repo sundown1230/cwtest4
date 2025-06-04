@@ -10,7 +10,7 @@ export interface Doctor {
   // password_hash は通常フロントエンドには含めません
   created_at?: string; // ISO 8601 datetime string
   updated_at?: string; // ISO 8601 datetime string
-  specialties?: Specialty[] | string[]; // APIのレスポンス形式に合わせる
+  specialties?: Specialty[]; // 診療科情報は Specialty オブジェクトの配列として扱うことを推奨
 }
 
 export interface Specialty {
@@ -78,4 +78,5 @@ export interface DoctorDbRecord {
   password_hash: string; // 認証に使用するパスワードハッシュ
   created_at?: string; // ISO 8601 datetime string (DB側で自動生成される場合はオプショナル)
   updated_at?: string; // ISO 8601 datetime string (DB側で自動生成される場合はオプショナル)
+  // specialties は doctor_specialties テーブルで別途管理されるため、この型には直接含めない
 }

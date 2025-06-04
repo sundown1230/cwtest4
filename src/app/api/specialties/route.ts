@@ -25,20 +25,9 @@ export async function GET() {
     // D1Result<T> 型を使用して、success/error プロパティを確認できるようにする
     const d1Result: D1Result<Specialty> = await stmt.all();
 
-    console.log('[GET /api/specialties] Query executed. Result:', JSON.stringify(d1Result));
+    console.log('[GET /api/specialties] Query executed. Success:', d1Result.success, 'Error:', d1Result.error, 'Results count:', d1Result.results?.length);
 
-    if (!d1Result.success) {
-        console.error('[GET /api/specialties] D1 query failed:', d1Result.error);
-        return NextResponse.json<ApiResponse>({ 
-          success: false, 
-          error: 'データベースクエリエラー', 
-          // D1のエラー詳細を details に含める
-          message: 'D1クエリ実行中にエラーが発生しました。',
-          details: d1Result.error, // D1からのエラー情報を details に設定
-        }, { status: 500 });
-    }
-
-    const results = d1Result.results;
+    const results = d1Result.results; // d1Result.success が true の場合、results は存在するはず
 
     console.log('[GET /api/specialties] Query successful. Found', results ? results.length : 0, 'specialties.');
 
@@ -52,25 +41,29 @@ export async function GET() {
 
   } catch (error: unknown) { // 予期せぬエラーを捕捉、型を unknown に変更
     console.error('[GET /api/specialties] Unexpected error:', error);
-    let errorDetails: any = '不明なエラー'; // details は any 型を許容 (ApiResponse 型定義による)
+    let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
+    let errorDetails: any = '不明なエラー'; 
+
     if (error instanceof Error) {
+      errorMessage = error.message; // エラーメッセージを更新
       let causeMessage = '';
       // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
       if ('cause' in error && error.cause instanceof Error) {
          causeMessage = ` (Cause: ${error.cause.message})`;
       }
       // エラーメッセージと原因を詳細として含める
-      errorDetails = { 
-        message: error.message, 
+      errorDetails = {
+        message: error.message,
         cause: causeMessage.trim() !== '' ? causeMessage.substring(8) : undefined // " (Cause: " を削除
       };
       // 詳細オブジェクトが空の場合は、エラーメッセージ自体を詳細とする
       if (Object.keys(errorDetails).every(key => errorDetails[key] === undefined || errorDetails[key] === '')) errorDetails = error.message;
     }
+
     return NextResponse.json<ApiResponse>({ 
       success: false, 
       error: '予期せぬエラー', 
-      message: '診療科情報の取得中に予期せぬエラーが発生しました', // 一般的なエラーメッセージ
+      message: errorMessage, // より具体的なエラーメッセージ
       details: errorDetails // 詳細なエラー情報を details に設定
     }, { status: 500 });
   }
