@@ -66,8 +66,15 @@ export async function GET() {
     console.error('Error fetching doctors list:', error);
     let errorDetails: any = '不明なエラー';
     if (error instanceof Error) {
-      errorDetails = { message: error.message, cause: error.cause };
+      errorDetails = {
+        message: error.message,
+        // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
+        cause: ('cause' in error && error.cause instanceof Error) ? error.cause.message : undefined
+      };
+      // 詳細オブジェクトが空または意味がない場合は、エラーメッセージ自体を詳細とする
+      if (Object.values(errorDetails).every(val => val === undefined || val === '')) errorDetails = error.message;
     }
+
     return NextResponse.json<ApiResponse>({ 
       success: false, 
       error: '医師リストの取得に失敗しました', 
