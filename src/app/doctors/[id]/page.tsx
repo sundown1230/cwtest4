@@ -29,16 +29,17 @@ export default function DoctorProfile() {
 
   const fetchDoctorProfile = async () => {
     try {
-      // API_KEYを直接指定
-      const API_KEY = 'your-secret-api-key-123';
+      // 環境変数からAPIキーを取得
+      const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8787';
       
       // ヘッダーを明示的に設定
       const headers = new Headers({
         'Content-Type': 'application/json',
-        'X-API-Key': API_KEY
+        'X-API-Key': API_KEY || ''
       });
       
-      const response = await fetch(`http://localhost:8787/api/doctors/${params.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/doctors/${params.id}`, {
         method: 'GET',
         headers: headers
       });
