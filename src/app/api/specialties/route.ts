@@ -45,7 +45,7 @@ export async function GET() {
 
   } catch (error: unknown) { // 予期せぬエラーを捕捉、型を unknown に変更
     console.error('[GET /api/specialties] Unexpected error:', error);
-    let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
+    let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました'; // 変数名を修正
     let errorDetails: any = error; // デフォルトでエラーオブジェクト全体を詳細に含める
 
     if (error instanceof Error) {
@@ -67,7 +67,7 @@ export async function GET() {
     return NextResponse.json<ApiResponse>({ 
       success: false, 
       error: '予期せぬエラー', 
-      message: generalErrorMessage, // より具体的なエラーメッセージ
+      message: errorMessage, // 変数名を修正
       details: errorDetails // 詳細なエラー情報を details に設定
     }, { status: 500 });
   }
