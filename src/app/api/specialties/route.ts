@@ -25,9 +25,11 @@ export async function GET() {
     // D1Result<T> 型を使用して、success/error プロパティを確認できるようにする
     const d1Result: D1Result<Specialty> = await stmt.all();
 
-    console.log('[GET /api/specialties] Query executed. Success:', d1Result.success, 'Error:', d1Result.error, 'Results count:', d1Result.results?.length);
+    // D1Result.success はクエリが成功したかどうかを示す (通常は true、エラー時は例外がスローされることが多い)
+    // D1Result.error は詳細なエラーメッセージを含むことがある
+    console.log('[GET /api/specialties] Query executed. Success:', d1Result.success, 'Error (if any):', d1Result.error, 'Results count:', d1Result.results?.length);
 
-    const results = d1Result.results; // d1Result.success が true の場合、results は存在するはず
+    const results = d1Result.results ?? []; // results が undefined の場合は空配列にフォールバック
 
     console.log('[GET /api/specialties] Query successful. Found', results ? results.length : 0, 'specialties.');
 
@@ -41,29 +43,32 @@ export async function GET() {
 
   } catch (error: unknown) { // 予期せぬエラーを捕捉、型を unknown に変更
     console.error('[GET /api/specialties] Unexpected error:', error);
-    let errorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
+    let generalErrorMessage = '診療科情報の取得中に予期せぬエラーが発生しました';
     let errorDetails: any = '不明なエラー'; 
 
     if (error instanceof Error) {
-      errorMessage = error.message; // エラーメッセージを更新
+      generalErrorMessage = error.message; // エラーメッセージを更新
       let causeMessage = '';
       // 'cause' プロパティが存在し、かつそれが Error インスタンスであるかチェック
       if ('cause' in error && error.cause instanceof Error) {
          causeMessage = ` (Cause: ${error.cause.message})`;
       }
       // エラーメッセージと原因を詳細として含める
-      errorDetails = {
+      const detailsObject = {
         message: error.message,
         cause: causeMessage.trim() !== '' ? causeMessage.substring(8) : undefined // " (Cause: " を削除
       };
       // 詳細オブジェクトが空の場合は、エラーメッセージ自体を詳細とする
-      if (Object.keys(errorDetails).every(key => errorDetails[key] === undefined || errorDetails[key] === '')) errorDetails = error.message;
+      if (Object.values(detailsObject).every(val => val === undefined || val === '')) {
+        errorDetails = error.message;
+      } else {
+        errorDetails = detailsObject;
+      }
     }
-
     return NextResponse.json<ApiResponse>({ 
       success: false, 
       error: '予期せぬエラー', 
-      message: errorMessage, // より具体的なエラーメッセージ
+      message: generalErrorMessage, // より具体的なエラーメッセージ
       details: errorDetails // 詳細なエラー情報を details に設定
     }, { status: 500 });
   }
