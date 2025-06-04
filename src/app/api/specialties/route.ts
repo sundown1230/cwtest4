@@ -32,7 +32,9 @@ export async function GET() {
         return NextResponse.json<ApiResponse>({ 
           success: false, 
           error: 'データベースクエリエラー', 
-          message: (d1Result.error && d1Result.error.trim() !== '') ? d1Result.error : 'D1クエリ実行中にエラーが発生しました。'
+          // D1のエラー詳細を details に含める
+          message: 'D1クエリ実行中にエラーが発生しました。',
+          details: d1Result.error, // D1からのエラー情報を details に設定
         }, { status: 500 });
     }
 
@@ -62,7 +64,7 @@ export async function GET() {
     return NextResponse.json<ApiResponse>({ 
       success: false, 
       error: '予期せぬエラー', 
-      message: errorMessage 
+      details: errorMessage // 予期せぬエラーの詳細を details に設定
     }, { status: 500 });
   }
 }
