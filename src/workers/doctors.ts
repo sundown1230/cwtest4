@@ -194,7 +194,14 @@ export default {
         const result = await stmt.first<{ id: number; name: string; gender: 'M' | 'F' | 'O' | 'N'; birthdate: string; license_date: string; email: string; specialty_names: string | null }>();
 
         if (result) {
-          const doctorData: WorkerDoctor = { ...result, specialties: result.specialty_names ? result.specialty_names.split(',') : [] };
+          // Split comma-separated names and trim whitespace, results in string[]
+          const specialtyNameStrings = result.specialty_names ? result.specialty_names.split(',').map(s => s.trim()) : [];
+          // Map string names to Specialty objects with a placeholder ID
+          const mappedSpecialties: Specialty[] = specialtyNameStrings.map(name => ({
+            id: 0, // Placeholder: Actual specialty IDs are not fetched by the current query.
+            name: name,
+          }));
+          const doctorData: WorkerDoctor = { ...result, specialties: mappedSpecialties };
           return new Response(JSON.stringify({ success: true, data: doctorData }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
