@@ -173,7 +173,7 @@ export default function Register() {
               required
               disabled={isLoading}
             >
-              {console.log("Register Page: Rendering specialties select. Current specialties:", specialties)} {/* ★追加: レンダリング時のステート確認 */}
+              {/* {console.log("Register Page: Rendering specialties select. Current specialties:", specialties)} */} {/* ★追加: レンダリング時のステート確認 */}
               <option value="">選択してください</option>
               {specialties.map((specialty) => ( // specialty オブジェクトの name プロパティを使用
                 <option key={specialty.id} value={specialty.name}>
