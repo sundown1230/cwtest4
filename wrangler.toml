@@ -1,6 +1,5 @@
 name = "cwtest4"
-main = "src/workers/doctors.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-01-01" # Pages Functions でも必要に応じて互換性日付を設定
 
 # ローカル開発用の設定
 [dev]
@@ -27,16 +26,17 @@ CLOUDFLARE_ACCOUNT_ID = "your-account-id"
 CLOUDFLARE_API_TOKEN = "your-api-token"
 
 # ビルド設定
-[build]
-command = "npm run build:workers"
+[build] # Next.js のビルドコマンドを使用
+command = "npm run build"
 
 # 本番環境の設定
 [env.production]
 name = "cwtest4"
-route = "cwtest4.pages.dev"
+route = "cwtest4.pages.dev" # Pages のカスタムドメイン設定
 workers_dev = false
 
 # ルート設定
-routes = [
-  { pattern = "/api/doctors/*", custom_domain = "cwtest4.cool-credit-5ae4.workers.dev" }
-]
+# Pages Functions を使用する場合、API ルートは Next.js のファイルベースルーティングで自動的に処理されます。
+# 特定のパスを別のWorkerにルーティングしたい場合のみ、routes を設定します。
+# 例: routes = [ { pattern = "/worker-only-api/*", custom_domain = "your-worker.workers.dev" } ]
+routes = [] # Pages Functions に移行したため、Worker へのルーティングは不要に
